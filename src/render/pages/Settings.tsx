@@ -44,11 +44,19 @@ const Settings: React.FC = () => {
       </div>
 
       <Card>
-        <Tabs activeKey={activeTab} onChange={setActiveTab} type="card" size="large">
-          <TabPane tab="딜레이 설정" key="delay">
-            <DelaySettings />
-          </TabPane>
-        </Tabs>
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          type="card"
+          size="large"
+          items={[
+            {
+              key: 'delay',
+              label: '딜레이 설정',
+              children: <DelaySettings />,
+            },
+          ]}
+        />
       </Card>
     </div>
   )

@@ -80,7 +80,7 @@ export async function exportPostsXlsx(data: {
   keyword: string
   limit?: number
 }): Promise<Blob> {
-  const res = await fetch(`${API_BASE_URL}/export-posts-xlsx`, {
+  const res = await fetch(`${API_BASE_URL}/instagram/workflow/export-posts-xlsx`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -94,7 +94,7 @@ export async function exportPostsXlsx(data: {
 export async function sendDmTo(file: File): Promise<any> {
   const formData = new FormData()
   formData.append('file', file)
-  const res = await fetch(`${API_BASE_URL}/send-dm-to`, {
+  const res = await fetch(`${API_BASE_URL}/instagram/workflow/send-dm-to`, {
     method: 'POST',
     body: formData,
   })

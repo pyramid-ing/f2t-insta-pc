@@ -55,14 +55,23 @@ const App: React.FC = () => {
     <StyledLayout>
       <Sider width={200}>
         <Logo>인스타그램 봇</Logo>
-        <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
-          <Menu.Item key="1" icon={<HomeOutlined />}>
-            <NavLink to="/">인스타 대시보드</NavLink>
-          </Menu.Item>
-          <Menu.Item key="2" icon={<SettingOutlined />}>
-            <NavLink to="/settings">설정</NavLink>
-          </Menu.Item>
-        </Menu>
+        <Menu
+          theme="dark"
+          defaultSelectedKeys={['1']}
+          mode="inline"
+          items={[
+            {
+              key: '1',
+              icon: <HomeOutlined />,
+              label: <NavLink to="/">인스타 대시보드</NavLink>,
+            },
+            {
+              key: '2',
+              icon: <SettingOutlined />,
+              label: <NavLink to="/settings">설정</NavLink>,
+            },
+          ]}
+        />
       </Sider>
       <Layout>
         <StyledHeader>윈소프트 인스타그램 봇</StyledHeader>
@@ -71,14 +80,21 @@ const App: React.FC = () => {
             <Route
               path="/"
               element={(
-                <Tabs defaultActiveKey="send-dm">
-                  <Tabs.TabPane tab="DM 보내기" key="send-dm">
-                    <SendDMForm />
-                  </Tabs.TabPane>
-                  <Tabs.TabPane tab="게시물 엑셀 내보내기" key="export-posts">
-                    <ExportPostsXlsx />
-                  </Tabs.TabPane>
-                </Tabs>
+                <Tabs
+                  defaultActiveKey="send-dm"
+                  items={[
+                    {
+                      key: 'send-dm',
+                      label: 'DM 보내기',
+                      children: <SendDMForm />,
+                    },
+                    {
+                      key: 'export-posts',
+                      label: '게시물 엑셀 내보내기',
+                      children: <ExportPostsXlsx />,
+                    },
+                  ]}
+                />
               )}
             />
             <Route path="/settings" element={<SettingsPage />} />
