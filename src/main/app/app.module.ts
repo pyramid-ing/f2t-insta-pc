@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { ElectronModule } from '@doubleshot/nest-electron'
 import customConfig from '@main/app/config/custom-config'
+import { InstagramModule } from '@main/app/modules/instagram/instagram.module'
 import { SettingsModule } from '@main/app/modules/settings/settings.module'
 import { PrismaService } from '@main/app/shared/prisma.service'
 import { GlobalExceptionFilter } from '@main/filters/global-exception.filter'
@@ -8,7 +9,6 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, HttpAdapterHost } from '@nestjs/core'
 import { app, BrowserWindow } from 'electron'
-import {InstagramModule} from "@main/app/modules/instagram/instagram.module";
 
 @Module({
   imports: [

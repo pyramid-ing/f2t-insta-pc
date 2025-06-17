@@ -45,8 +45,6 @@ const Settings: React.FC = () => {
 
       <Card>
         <Tabs activeKey={activeTab} onChange={setActiveTab} type="card" size="large">
-          <TabPane tab="사이트 관리" key="sites">
-          </TabPane>
           <TabPane tab="딜레이 설정" key="delay">
             <DelaySettings />
           </TabPane>

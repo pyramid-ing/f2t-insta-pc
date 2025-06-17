@@ -5,7 +5,6 @@ import { NavLink, Route, Routes } from 'react-router-dom'
 import styled from 'styled-components'
 import ExportPostsXlsx from '../components/ExportPostsXlsx'
 import SendDMForm from '../components/SendDMForm'
-import TerminalLog from '../components/TerminalLog'
 import SettingsPage from './Settings'
 
 const { Sider, Header, Content } = Layout
@@ -40,21 +39,12 @@ const Logo = styled.div`
   border-radius: 4px;
 `
 
-interface AppStatus {
-  initialized: boolean
-  setupCompleted: boolean
-  firstRun: boolean
-  appVersion: string
-  error?: string
-}
-
 const App: React.FC = () => {
   useEffect(() => {
     // 백엔드 포트 확인
     window.electronAPI
       .getBackendPort()
       .then((port) => {
-        console.log('백엔드 포트:', port)
       })
       .catch((error) => {
         console.error('백엔드 포트 확인 실패:', error)
@@ -64,10 +54,10 @@ const App: React.FC = () => {
   return (
     <StyledLayout>
       <Sider width={200}>
-        <Logo>F2T 인덱싱</Logo>
+        <Logo>인스타그램 봇</Logo>
         <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
           <Menu.Item key="1" icon={<HomeOutlined />}>
-            <NavLink to="/">인덱싱 대시보드</NavLink>
+            <NavLink to="/">인스타 대시보드</NavLink>
           </Menu.Item>
           <Menu.Item key="2" icon={<SettingOutlined />}>
             <NavLink to="/settings">설정</NavLink>
@@ -75,7 +65,7 @@ const App: React.FC = () => {
         </Menu>
       </Sider>
       <Layout>
-        <StyledHeader>F2T 인덱싱 봇</StyledHeader>
+        <StyledHeader>윈소프트 인스타그램 봇</StyledHeader>
         <StyledContent>
           <Routes>
             <Route
@@ -87,10 +77,6 @@ const App: React.FC = () => {
                   </Tabs.TabPane>
                   <Tabs.TabPane tab="게시물 엑셀 내보내기" key="export-posts">
                     <ExportPostsXlsx />
-                  </Tabs.TabPane>
-                  <Tabs.TabPane tab="작업 로그" key="logs">
-                    {/* logs 상태는 상위에서 관리하거나 context로 전달 필요 */}
-                    <TerminalLog logs={[]} />
                   </Tabs.TabPane>
                 </Tabs>
               )}

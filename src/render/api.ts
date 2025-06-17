@@ -72,3 +72,33 @@ export function getErrorDetails(error: any): string | undefined {
 
   return undefined
 }
+
+// 게시물 엑셀 내보내기
+export async function exportPostsXlsx(data: {
+  loginUsername: string
+  loginPassword: string
+  keyword: string
+  limit?: number
+}): Promise<Blob> {
+  const res = await fetch(`${API_BASE_URL}/export-posts-xlsx`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok)
+    throw new Error('엑셀 내보내기 실패')
+  return await res.blob()
+}
+
+// DM 보내기 (엑셀 업로드)
+export async function sendDmTo(file: File): Promise<any> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await fetch(`${API_BASE_URL}/send-dm-to`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok)
+    throw new Error('DM 전송 실패')
+  return await res.json()
+}
