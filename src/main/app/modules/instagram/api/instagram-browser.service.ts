@@ -10,15 +10,14 @@ puppeteerExtra.use(StealthPlugin())
 @Injectable()
 export class InstagramBrowserService implements OnModuleDestroy {
   private browser: Browser = null
-  private headless: boolean = false
   private page: Page = null
   private cookiesDir = 'static/cookies/instagram'
 
   async createBrowser(headless = false, loginUsername?: string) {
     if (!this.browser) {
-      this.headless = headless
       this.browser = await puppeteerExtra.launch({
         headless,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -38,7 +37,7 @@ export class InstagramBrowserService implements OnModuleDestroy {
 
   async getPage(): Promise<Page> {
     if (!this.browser) {
-      await this.createBrowser(this.headless)
+      await this.createBrowser()
     }
 
     const pages = await this.browser.pages()
