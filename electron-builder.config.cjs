@@ -1,5 +1,3 @@
-const { version, description } = require('./package.json')
-
 /**
  * @type {import('electron-builder').Configuration}
  * @see https://www.electron.build/configuration/configuration

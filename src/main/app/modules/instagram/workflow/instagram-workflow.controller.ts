@@ -6,10 +6,12 @@ import {
   WorkflowExportXlsxDto,
   WorkflowSendDmToDto,
 } from '@main/app/modules/instagram/workflow/dto/instagram-worflow.dto'
+import { SettingsService } from '@main/app/shared/settings.service'
 import { sleep } from '@main/app/utils/sleep'
 import { Body, Controller, HttpException, HttpStatus, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { Response } from 'express'
+import { File as MulterFile } from 'multer'
 import * as XLSX from 'xlsx'
 
 @Controller()
@@ -19,7 +21,23 @@ export class InstagramWorkflowController {
     private readonly searchService: InstagramSearchService,
     private readonly dmService: InstagramDmService,
     private readonly followService: InstagramFollowService,
+    private readonly settingsService: SettingsService,
   ) {}
+
+  private async getRandomDelayFromSettings(): Promise<number> {
+    const setting = await this.settingsService.findByKey('instagram')
+    let minDelay = 1000
+    let maxDelay = 3000
+    if (setting?.data) {
+      try {
+        const parsed = typeof setting.data === 'string' ? JSON.parse(setting.data) : setting.data
+        minDelay = parsed.minDelay ?? 1000
+        maxDelay = parsed.maxDelay ?? 3000
+      }
+      catch {}
+    }
+    return Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay
+  }
 
   @Post('export-posts-xlsx')
   async exportPostsToXlsx(@Body() dto: WorkflowExportXlsxDto, @Res() res: Response) {
@@ -28,7 +46,7 @@ export class InstagramWorkflowController {
     await browserService.createBrowser(false, dto.loginUsername)
     const page = await browserService.getPage()
     await page.goto('https://www.instagram.com')
-    await sleep(3000)
+    await sleep(await this.getRandomDelayFromSettings())
     // 2. 로그인 필요 체크 및 로그인
     const loginStatus = await this.loginService.isLogin(page)
     if (!loginStatus.isLoggedIn) {
@@ -41,6 +59,8 @@ export class InstagramWorkflowController {
         throw new HttpException('로그인 실패, 로그인후 사용해주세요', HttpStatus.UNAUTHORIZED)
       }
     }
+    await sleep(3000)
+    await sleep(await this.getRandomDelayFromSettings())
     // 3. 유저 목록 추출 (검색)
     const searchResult = await this.searchService.search({
       keyword: dto.keyword,
@@ -71,7 +91,7 @@ export class InstagramWorkflowController {
 
   @Post('send-dm-to')
   @UseInterceptors(FileInterceptor('file'))
-  async sendDmTo(@UploadedFile() file: Express.Multer.File, @Body() body: WorkflowSendDmToDto, @Res() res: Response) {
+  async sendDmTo(@UploadedFile() file: MulterFile, @Body() body: WorkflowSendDmToDto, @Res() res: Response) {
     if (!file) {
       throw new HttpException('엑셀 파일이 필요합니다.', HttpStatus.BAD_REQUEST)
     }
@@ -89,7 +109,7 @@ export class InstagramWorkflowController {
     await browserService.createBrowser(false, firstRow.id)
     const page = await browserService.getPage()
     await page.goto('https://www.instagram.com')
-    await sleep(3000)
+    await sleep(await this.getRandomDelayFromSettings())
     // 3. 로그인 필요 체크 및 로그인
     const loginStatus = await this.loginService.isLogin(page)
     if (!loginStatus.isLoggedIn) {
@@ -113,6 +133,7 @@ export class InstagramWorkflowController {
         dmResult = await this.dmService.sendDm({ username: targetId, message: dm, loginUsername: firstRow.id }, page)
       }
       results.push({ targetId, followResult, dmResult })
+      await sleep(await this.getRandomDelayFromSettings())
     }
     await page.close()
     res.json({ success: true, results })
