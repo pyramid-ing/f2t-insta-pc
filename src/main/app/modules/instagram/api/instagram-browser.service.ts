@@ -11,7 +11,6 @@ puppeteerExtra.use(StealthPlugin())
 export class InstagramBrowserService implements OnModuleDestroy {
   private browser: Browser = null
   private page: Page = null
-  private cookiesDir = 'static/cookies/instagram'
 
   async createBrowser(headless = false, loginUsername?: string) {
     if (!this.browser) {
@@ -72,7 +71,7 @@ export class InstagramBrowserService implements OnModuleDestroy {
   }
 
   private getCookiePath(username: string): string {
-    return path.join(process.cwd(), this.cookiesDir, getCookieJsonName(username))
+    return path.join(process.env.COOKIE_DIR, 'instagram', getCookieJsonName(username))
   }
 
   public async loadCookiesToBrowser(browser: Browser, username: string): Promise<boolean> {
@@ -96,4 +95,8 @@ export class InstagramBrowserService implements OnModuleDestroy {
     const cookies = await browser.cookies()
     fs.writeFileSync(this.getCookiePath(username), JSON.stringify(cookies))
   }
+}
+
+function getCookieJsonName(username: string): string {
+  return `${username}.json`
 }
