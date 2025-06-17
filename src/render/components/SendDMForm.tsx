@@ -38,7 +38,10 @@ const SendDMForm: React.FC = () => {
       <Form layout="vertical" onFinish={onFinish} style={{ maxWidth: 400 }}>
         <Form.Item label="엑셀 파일 업로드" required>
           <Upload
-            beforeUpload={(file) => { setFile(file); return false }}
+            beforeUpload={(file) => {
+              setFile(file)
+              return false
+            }}
             maxCount={1}
             accept=".xlsx"
             showUploadList={!!file}

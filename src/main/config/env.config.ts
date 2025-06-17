@@ -93,10 +93,6 @@ export class EnvConfig {
       isElectron: this.isElectron,
       isPackaged: this.isPackaged,
       resourcePath: this.resourcePath,
-      ...(this.isPackaged && {
-        enginePath: path.join(this.resourcePath, 'prisma-engines', this.engineName),
-        libPath: path.join(this.resourcePath, 'prisma-engines', this.libName),
-      }),
     }
   }
 }
