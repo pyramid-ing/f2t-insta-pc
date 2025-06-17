@@ -102,3 +102,19 @@ export async function sendDmTo(file: File): Promise<any> {
     throw new Error('DM 전송 실패')
   return await res.json()
 }
+
+// 인스타그램 설정 불러오기
+export async function getInstagramSettings() {
+  const res = await fetch(`${API_BASE_URL}/settings/instagram`)
+  return await res.json()
+}
+
+// 인스타그램 설정 저장
+export async function saveInstagramSettings(data: any) {
+  const res = await fetch(`${API_BASE_URL}/settings/instagram`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  return await res.json()
+}

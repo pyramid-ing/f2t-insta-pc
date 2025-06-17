@@ -7,24 +7,22 @@ import ExportPostsXlsx from '../components/ExportPostsXlsx'
 import SendDMForm from '../components/SendDMForm'
 import SettingsPage from './Settings'
 
-const { Sider, Header, Content } = Layout
+const { Sider, Content } = Layout
 
 const StyledLayout = styled(Layout)`
+    width: 100%;
   min-height: 100vh;
+  height: 100vh;
 `
-
-const StyledHeader = styled(Header)`
-  padding: 0 24px;
-  background: #fff;
-  font-size: 18px;
-  font-weight: bold;
-`
-
 const StyledContent = styled(Content)`
-  margin: 24px 16px;
-  padding: 24px;
+  margin: 0;
+  padding: 0;
   background: #fff;
-  min-height: 280px;
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  align-items: start;
+  justify-content: start;
 `
 
 const Logo = styled.div`
@@ -54,7 +52,7 @@ const App: React.FC = () => {
   return (
     <StyledLayout>
       <Sider width={200}>
-        <Logo>인스타그램 봇</Logo>
+        <Logo>인스타 봇</Logo>
         <Menu
           theme="dark"
           defaultSelectedKeys={['1']}
@@ -74,27 +72,29 @@ const App: React.FC = () => {
         />
       </Sider>
       <Layout>
-        <StyledHeader>윈소프트 인스타그램 봇</StyledHeader>
         <StyledContent>
           <Routes>
             <Route
               path="/"
               element={(
-                <Tabs
-                  defaultActiveKey="send-dm"
-                  items={[
-                    {
-                      key: 'send-dm',
-                      label: 'DM 보내기',
-                      children: <SendDMForm />,
-                    },
-                    {
-                      key: 'export-posts',
-                      label: '게시물 엑셀 내보내기',
-                      children: <ExportPostsXlsx />,
-                    },
-                  ]}
-                />
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Tabs
+                    defaultActiveKey="send-dm"
+                    style={{ width: 500, maxWidth: '90vw' }}
+                    items={[
+                      {
+                        key: 'send-dm',
+                        label: 'DM 보내기',
+                        children: <SendDMForm />,
+                      },
+                      {
+                        key: 'export-posts',
+                        label: '게시물 엑셀 내보내기',
+                        children: <ExportPostsXlsx />,
+                      },
+                    ]}
+                  />
+                </div>
               )}
             />
             <Route path="/settings" element={<SettingsPage />} />

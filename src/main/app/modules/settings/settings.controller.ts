@@ -1,6 +1,6 @@
 import { PrismaService } from '@main/app/shared/prisma.service'
 import { SettingsService } from '@main/app/shared/settings.service'
-import { Body, Controller, Get, Logger, Put } from '@nestjs/common'
+import { Body, Controller, Get, Logger, Post, Put } from '@nestjs/common'
 
 @Controller('settings')
 export class SettingsController {
@@ -61,6 +61,30 @@ export class SettingsController {
     }
     catch (error) {
       this.logger.error('앱 상태 조회 실패:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  @Get('instagram')
+  async getInstagramSettings() {
+    try {
+      const setting = await this.settingsService.findByKey('instagram')
+      return { success: true, data: setting?.data || {} }
+    }
+    catch (error) {
+      this.logger.error('인스타그램 설정 조회 실패:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  @Post('instagram')
+  async saveInstagramSettings(@Body() data: any) {
+    try {
+      await this.settingsService.saveByKey('instagram', data)
+      return { success: true }
+    }
+    catch (error) {
+      this.logger.error('인스타그램 설정 저장 실패:', error)
       return { success: false, error: error.message }
     }
   }

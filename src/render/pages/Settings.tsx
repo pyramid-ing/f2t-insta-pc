@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react'
 import DelaySettings from '../components/settings/DelaySettings'
 
 const { Title } = Typography
-const { TabPane } = Tabs
 
 const Settings: React.FC = () => {
   const [loading, setLoading] = useState(false)
