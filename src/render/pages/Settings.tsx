@@ -7,7 +7,7 @@ const { Title } = Typography
 
 const Settings: React.FC = () => {
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState('sites')
+  const [activeTab, setActiveTab] = useState('delay')
 
   useEffect(() => {
     loadSettings()
