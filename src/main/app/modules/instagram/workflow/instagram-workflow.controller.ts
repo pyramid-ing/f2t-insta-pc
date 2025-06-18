@@ -7,6 +7,7 @@ import {
   WorkflowSendDmToDto,
 } from '@main/app/modules/instagram/workflow/dto/instagram-worflow.dto'
 import { SettingsService } from '@main/app/shared/settings.service'
+import { humanClick } from '@main/app/utils/human-actions'
 import { sleep } from '@main/app/utils/sleep'
 import { Body, Controller, HttpException, HttpStatus, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
@@ -114,6 +115,31 @@ export class InstagramWorkflowController {
   }
 
   /**
+   * 로그인 후 '정보 저장' 다이얼로그 자동 처리
+   */
+  private async handleSaveInfoDialog(page: any) {
+    try {
+      await page.waitForSelector('button._acan._acap._acas._aj1-._ap30', { timeout: 3000 })
+      // '정보 저장' 버튼 텍스트 확인 후 클릭
+      const saveBtnIndex = await page.evaluate(() => {
+        const btns = Array.from(document.querySelectorAll('button._acan._acap._acas._aj1-._ap30'))
+        for (let i = 0; i < btns.length; i++) {
+          if (btns[i].textContent?.trim() === '정보 저장')
+            return i
+        }
+        return -1
+      })
+      if (saveBtnIndex !== -1) {
+        const saveBtnSelector = `button._acan._acap._acas._aj1-._ap30:nth-of-type(${saveBtnIndex + 1})`
+        await humanClick(page, saveBtnSelector)
+      }
+    }
+    catch {
+      // 다이얼로그가 안 뜨면 무시
+    }
+  }
+
+  /**
    * 인스타그램 수동 로그인 워크플로우 (로그인만 수행)
    */
   @Post('login')
@@ -128,25 +154,23 @@ export class InstagramWorkflowController {
       let isLoggedIn = false
       while (Date.now() - start < 60000) {
         await sleep(1000)
-        const url = loginPage.url()
-        if (!url.includes('accounts/login')) {
-          await this.loginService.browserService.saveCookies(loginPage.browserContext().browser(), 'instagram')
-          return { success: true, message: '인스타그램 로그인이 완료되었습니다.', browser, page: loginPage }
-        }
         isLoggedIn = await this.loginService.checkLoginStatus(loginPage)
         if (isLoggedIn) {
+          await sleep(3000)
+          await this.handleSaveInfoDialog(loginPage)
           await this.loginService.browserService.saveCookies(loginPage.browserContext().browser(), 'instagram')
-          return { success: true, message: '인스타그램 로그인이 완료되었습니다.', browser, page: loginPage }
+          await browser.close()
+          return res.json({ success: true, message: '인스타그램 로그인이 완료되었습니다.' })
         }
       }
       await browser.close()
-      return { success: false, message: '로그인 대기 시간이 초과되었습니다. 1분 내에 로그인해주세요.' }
+      return res.status(408).json({ success: false, message: '로그인 대기 시간이 초과되었습니다. 1분 내에 로그인해주세요.' })
     }
     catch (error) {
       if (browser) {
         await browser.close()
       }
-      return { success: false, message: `로그인 워크플로우 실패: ${error.message}` }
+      return res.status(500).json({ success: false, message: `로그인 워크플로우 실패: ${error.message}` })
     }
   }
 }

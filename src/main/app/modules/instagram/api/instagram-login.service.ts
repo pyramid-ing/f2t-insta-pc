@@ -1,7 +1,6 @@
 import {
   InstagramActionResponse,
   InstagramLoginResponse,
-  InstagramLoginStatus,
 } from '@main/app/modules/instagram/api/interfaces/instagram.interface'
 import { humanClick, humanType } from '@main/app/utils/human-actions'
 import { sleep } from '@main/app/utils/sleep'
@@ -25,7 +24,7 @@ export class InstagramLoginService extends InstagramBaseService {
 
   constructor(
     protected readonly configService: ConfigService,
-    protected readonly browserService: InstagramBrowserService,
+    public readonly browserService: InstagramBrowserService,
   ) {
     super(configService, browserService)
   }
@@ -146,24 +145,6 @@ export class InstagramLoginService extends InstagramBaseService {
     }
   }
 
-  async isLogin(page?: Page): Promise<InstagramLoginStatus> {
-    let localPage = page
-    if (!localPage) {
-      localPage = await this.browserService.getPage()
-    }
-    try {
-      const isLoggedIn = await this.checkLoginStatus(localPage)
-      return {
-        isLoggedIn,
-        username: this.currentUsername,
-      }
-    }
-    finally {
-      if (!page && localPage)
-        await localPage.close()
-    }
-  }
-
   async signout(page?: Page): Promise<InstagramActionResponse> {
     if (!this.isLoggedIn) {
       return { success: false, error: '이미 로그아웃 상태입니다.' }
@@ -207,7 +188,7 @@ export class InstagramLoginService extends InstagramBaseService {
       const page = await browser.newPage()
       await page.goto('https://www.instagram.com', { waitUntil: 'networkidle2' })
       // 로그인 상태 확인
-      const isLoggedIn = await this.checkLoginStatusPage(page)
+      const isLoggedIn = await this.checkLoginStatus(page)
       await browser.close()
       if (isLoggedIn) {
         return { isLoggedIn: true, needsLogin: false, message: '인스타그램 로그인 상태입니다.' }
@@ -221,7 +202,7 @@ export class InstagramLoginService extends InstagramBaseService {
     }
   }
 
-  protected async checkLoginStatusPage(page: Page): Promise<boolean> {
+  public async checkLoginStatus(page: Page): Promise<boolean> {
     return await super.checkLoginStatus(page)
   }
 }

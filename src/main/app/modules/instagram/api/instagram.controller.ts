@@ -6,7 +6,6 @@ import { InstagramSearchService } from '@main/app/modules/instagram/api/instagra
 import {
   InstagramActionResponse,
   InstagramLoginResponse,
-  InstagramLoginStatus,
   InstagramPost,
   InstagramSearchResult,
 } from '@main/app/modules/instagram/api/interfaces/instagram.interface'
@@ -128,11 +127,6 @@ export class InstagramController {
       },
       page,
     )
-  }
-
-  @Post('login/status')
-  async isLogin(@Body() dto: InstagramLoginDto): Promise<InstagramLoginStatus> {
-    return this.loginService.isLogin()
   }
 
   @Post('login')
