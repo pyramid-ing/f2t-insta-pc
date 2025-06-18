@@ -43,34 +43,39 @@ export class InstagramWorkflowController {
   @Post('export-posts-xlsx')
   async exportPostsToXlsx(@Body() dto: WorkflowExportXlsxDto, @Res() res: Response) {
     const browser = await this.loginService.browserService.createBrowser(false)
-    // 쿠키 로드 시도 (username은 'instagram' 등 고정값 또는 실제 사용자명)
-    await this.loginService.browserService.loadCookiesToBrowser(browser, 'instagram')
-    const page = await this.loginService.browserService.getPage(browser)
-    await page.goto('https://www.instagram.com')
-    await sleep(await this.getRandomDelayFromSettings())
-    // 3. 유저 목록 추출 (검색)
-    const searchResult = await this.searchService.search({
-      keyword: dto.keyword,
-      limit: dto.limit,
-      headless: false,
-    }, page)
-    if (!searchResult.success) {
-      await page.close()
-      throw new HttpException('검색 실패', HttpStatus.BAD_REQUEST)
+    try {
+      // 쿠키 로드 시도 (username은 'instagram' 등 고정값 또는 실제 사용자명)
+      await this.loginService.browserService.loadCookiesToBrowser(browser, 'instagram')
+      const page = await this.loginService.browserService.getPage(browser)
+      await page.goto('https://www.instagram.com')
+      await sleep(await this.getRandomDelayFromSettings())
+      // 3. 유저 목록 추출 (검색)
+      const searchResult = await this.searchService.search({
+        keyword: dto.keyword,
+        limit: dto.limit,
+        headless: false,
+      }, page)
+      if (!searchResult.success) {
+        await page.close()
+        throw new HttpException('검색 실패', HttpStatus.BAD_REQUEST)
+      }
+      // 4. 엑셀 데이터 생성 (id, pw, 대상id, DM내용, 팔로우)
+      const rows = searchResult.posts.map(post => ({
+        targetId: post.owner?.username || '',
+        dm: '',
+        follow: '',
+      }))
+      const worksheet = XLSX.utils.json_to_sheet(rows)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+      res.setHeader('Content-Disposition', 'attachment; filename="export.xlsx"')
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      res.send(buffer)
     }
-    // 4. 엑셀 데이터 생성 (id, pw, 대상id, DM내용, 팔로우)
-    const rows = searchResult.posts.map(post => ({
-      targetId: post.owner?.username || '',
-      dm: '',
-      follow: '',
-    }))
-    const worksheet = XLSX.utils.json_to_sheet(rows)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
-    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
-    res.setHeader('Content-Disposition', 'attachment; filename="export.xlsx"')
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    res.send(buffer)
+    finally {
+      await browser.close()
+    }
   }
 
   @Post('send-dm-to')
