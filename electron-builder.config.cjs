@@ -4,7 +4,7 @@
  */
 const config = {
   appId: 'com.f2t.insta',
-  productName: '윈소프트 인스타 봇',
+  productName: 'winsoft-insta',
   directories: {
     output: 'dist/electron',
   },
