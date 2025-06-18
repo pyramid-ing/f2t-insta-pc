@@ -1,3 +1,5 @@
+import axios from 'axios'
+
 const API_BASE_URL = 'http://localhost:3553'
 
 // 에러 코드 enum
@@ -80,41 +82,28 @@ export async function exportPostsXlsx(data: {
   keyword: string
   limit?: number
 }): Promise<Blob> {
-  const res = await fetch(`${API_BASE_URL}/instagram/workflow/export-posts-xlsx`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+  const res = await axios.post(`${API_BASE_URL}/instagram/workflow/export-posts-xlsx`, data, {
+    responseType: 'blob',
   })
-  if (!res.ok)
-    throw new Error('엑셀 내보내기 실패')
-  return await res.blob()
+  return res.data
 }
 
 // DM 보내기 (엑셀 업로드)
 export async function sendDmTo(file: File): Promise<any> {
   const formData = new FormData()
   formData.append('file', file)
-  const res = await fetch(`${API_BASE_URL}/instagram/workflow/send-dm-to`, {
-    method: 'POST',
-    body: formData,
-  })
-  if (!res.ok)
-    throw new Error('DM 전송 실패')
-  return await res.json()
+  const res = await axios.post(`${API_BASE_URL}/instagram/workflow/send-dm-to`, formData)
+  return res.data
 }
 
 // 인스타그램 설정 불러오기
 export async function getInstagramSettings() {
-  const res = await fetch(`${API_BASE_URL}/settings/instagram`)
-  return await res.json()
+  const res = await axios.get(`${API_BASE_URL}/settings/instagram`)
+  return res.data
 }
 
 // 인스타그램 설정 저장
 export async function saveInstagramSettings(data: any) {
-  const res = await fetch(`${API_BASE_URL}/settings/instagram`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-  return await res.json()
+  const res = await axios.post(`${API_BASE_URL}/settings/instagram`, data)
+  return res.data
 }
