@@ -91,32 +91,35 @@ export class InstagramWorkflowController {
     if (!rows.length) {
       throw new HttpException('엑셀 데이터가 비어있습니다.', HttpStatus.BAD_REQUEST)
     }
-    const firstRow = rows[0] as any
 
     // 워크플로우: 1. 브라우저 생성 및 로그인페이지 오픈, 2. 1분간 로그인 체크
     const browser = await this.loginService.browserService.createBrowser(false)
-    await this.loginService.browserService.loadCookiesToBrowser(browser, 'instagram')
-    const page = await this.loginService.browserService.getPage(browser)
-    await page.goto('https://www.instagram.com')
-    await sleep(await this.getRandomDelayFromSettings())
-    // 4. 각 행마다 자동 처리 (동일 page 재사용)
-    const results = []
-    for (const row of rows) {
-      const { targetId, dm, follow } = row as any
-      await page.goto(`https://www.instagram.com/${targetId}/`)
-      let followResult = null
-      let dmResult = null
-      if (follow === 1 || follow === '1') {
-        followResult = await this.followService.follow({ username: targetId, loginUsername: 'instagram' }, page)
-      }
-      if (dm) {
-        dmResult = await this.dmService.sendDm({ username: targetId, message: dm, loginUsername: 'instagram' }, page)
-      }
-      results.push({ targetId, followResult, dmResult })
+    try {
+      await this.loginService.browserService.loadCookiesToBrowser(browser, 'instagram')
+      const page = await this.loginService.browserService.getPage(browser)
+      await page.goto('https://www.instagram.com')
       await sleep(await this.getRandomDelayFromSettings())
+      // 4. 각 행마다 자동 처리 (동일 page 재사용)
+      const results = []
+      for (const row of rows) {
+        const { targetId, dm, follow } = row as any
+        await page.goto(`https://www.instagram.com/${targetId}/`)
+        let followResult = null
+        let dmResult = null
+        if (follow === 1 || follow === '1') {
+          followResult = await this.followService.follow({ username: targetId, loginUsername: 'instagram' }, page)
+        }
+        if (dm) {
+          dmResult = await this.dmService.sendDm({ username: targetId, message: dm, loginUsername: 'instagram' }, page)
+        }
+        results.push({ targetId, followResult, dmResult })
+        await sleep(await this.getRandomDelayFromSettings())
+      }
+      res.json({ success: true, results })
     }
-    await page.close()
-    res.json({ success: true, results })
+    finally {
+      await browser.close()
+    }
   }
 
   /**
@@ -164,18 +167,16 @@ export class InstagramWorkflowController {
           await sleep(3000)
           await this.handleSaveInfoDialog(loginPage)
           await this.loginService.browserService.saveCookies(loginPage.browserContext().browser(), 'instagram')
-          await browser.close()
           return res.json({ success: true, message: '인스타그램 로그인이 완료되었습니다.' })
         }
       }
-      await browser.close()
       return res.status(408).json({ success: false, message: '로그인 대기 시간이 초과되었습니다. 1분 내에 로그인해주세요.' })
     }
     catch (error) {
-      if (browser) {
-        await browser.close()
-      }
       return res.status(500).json({ success: false, message: `로그인 워크플로우 실패: ${error.message}` })
+    }
+    finally {
+      await browser.close()
     }
   }
 }
