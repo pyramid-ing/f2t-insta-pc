@@ -77,8 +77,6 @@ export function getErrorDetails(error: any): string | undefined {
 
 // 게시물 엑셀 내보내기
 export async function exportPostsXlsx(data: {
-  loginUsername: string
-  loginPassword: string
   keyword: string
   limit?: number
 }): Promise<Blob> {
@@ -105,5 +103,29 @@ export async function getInstagramSettings() {
 // 인스타그램 설정 저장
 export async function saveInstagramSettings(data: any) {
   const res = await axios.post(`${API_BASE_URL}/settings/instagram`, data)
+  return res.data
+}
+
+// 인스타그램 로그인 상태 확인
+export async function instagramLoginStatus(params?: { username?: string }) {
+  const res = await axios.post(`${API_BASE_URL}/instagram/api/login/status`, params || {})
+  return res.data
+}
+
+// 인스타그램 수동 로그인 완료 확인
+export async function checkLoginComplete() {
+  const res = await axios.post(`${API_BASE_URL}/instagram/api/check-login-complete`)
+  return res.data
+}
+
+// 인스타그램 로그인 상태 확인 (수동)
+export async function checkLoginStatus() {
+  const res = await axios.get(`${API_BASE_URL}/instagram/api/login-status`)
+  return res.data
+}
+
+// 워크플로우 기반 인스타그램 수동 로그인
+export async function workflowInstagramLogin() {
+  const res = await axios.post(`${API_BASE_URL}/instagram/workflow/login`)
   return res.data
 }

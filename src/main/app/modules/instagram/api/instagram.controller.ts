@@ -147,4 +147,14 @@ export class InstagramController {
   async signout(@Body() dto: InstagramLoginDto): Promise<InstagramActionResponse> {
     return this.loginService.signout()
   }
+
+  @Post('open-login')
+  async openLoginBrowser() {
+    return await this.loginService.openLoginBrowser()
+  }
+
+  @Get('login-status')
+  async checkLoginStatus() {
+    return await this.loginService.checkLoginStatusApi()
+  }
 }

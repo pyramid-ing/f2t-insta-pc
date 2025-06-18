@@ -1,47 +1,68 @@
 import { UploadOutlined } from '@ant-design/icons'
 import { Button, Form, message, Upload } from 'antd'
-import React, { useState } from 'react'
-import { sendDmTo } from '../api'
+import React, { useEffect, useState } from 'react'
+import { instagramLoginStatus, sendDmTo } from '../api'
 
 const SendDMForm: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [result, setResult] = useState<any>(null)
+  const [loginStatus, setLoginStatus] = useState<'checking' | 'loggedIn' | 'needLogin'>('checking')
 
-  const onFinish = async () => {
-    if (!file) {
-      message.warning('엑셀 파일을 업로드해주세요.')
-      return
-    }
+  useEffect(() => {
     setLoading(true)
-    setResult(null)
-    try {
-      const res = await sendDmTo(file)
-      setResult(res)
-      if (res.success) {
-        message.success('DM 전송이 완료되었습니다.')
-      }
-      else {
-        message.error('DM 전송에 실패했습니다.')
-      }
-    }
-    catch (e: any) {
-      message.error(e.message || 'DM 전송에 실패했습니다.')
-    }
-    finally {
-      setLoading(false)
-    }
+    instagramLoginStatus().then((res) => {
+      setLoginStatus(res.loggedIn ? 'loggedIn' : 'needLogin')
+    }).catch(() => setLoginStatus('needLogin')).finally(() => setLoading(false))
+  }, [])
+
+  const handleLogin = () => {
+    window.open('https://www.instagram.com/accounts/login/', '_blank', 'width=500,height=700')
+    message.info('로그인 후 새로고침 해주세요.')
+  }
+
+  if (loginStatus !== 'loggedIn') {
+    return (
+      <div style={{ maxWidth: 350, margin: '0 auto', marginTop: 40 }}>
+        <div style={{ marginBottom: 12 }}>로그인이 필요합니다.</div>
+        <Button type="primary" onClick={handleLogin}>인스타그램 로그인</Button>
+      </div>
+    )
   }
 
   return (
     <div>
-      <Form layout="vertical" onFinish={onFinish} style={{ maxWidth: 400 }}>
+      <Form
+        layout="vertical"
+        onFinish={async () => {
+          if (!file) {
+            message.warning('엑셀 파일을 업로드해주세요.')
+            return
+          }
+          setLoading(true)
+          setResult(null)
+          try {
+            const res = await sendDmTo(file)
+            setResult(res)
+            if (res.success) {
+              message.success('DM 전송이 완료되었습니다.')
+            }
+            else {
+              message.error('DM 전송에 실패했습니다.')
+            }
+          }
+          catch (e: any) {
+            message.error(e.message || 'DM 전송에 실패했습니다.')
+          }
+          finally {
+            setLoading(false)
+          }
+        }}
+        style={{ maxWidth: 400 }}
+      >
         <Form.Item label="엑셀 파일 업로드" required>
           <Upload
-            beforeUpload={(file) => {
-              setFile(file)
-              return false
-            }}
+            beforeUpload={(file) => { setFile(file); return false }}
             maxCount={1}
             accept=".xlsx"
             showUploadList={!!file}

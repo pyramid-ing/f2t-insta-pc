@@ -9,48 +9,42 @@ puppeteerExtra.use(StealthPlugin())
 
 @Injectable()
 export class InstagramBrowserService implements OnModuleDestroy {
-  private browser: Browser = null
-  private page: Page = null
-
-  async createBrowser(headless = false, loginUsername?: string) {
-    if (!this.browser) {
-      this.browser = await puppeteerExtra.launch({
-        headless,
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-web-security',
-          '--disable-features=IsolateOrigins,site-per-process',
-        ],
-      })
-      if (loginUsername) {
-        const pages = await this.browser.pages()
-        if (pages.length > 0) {
-          await this.loadCookiesToBrowser(this.browser, loginUsername)
-        }
-      }
+  async createBrowser(headless = false, loginUsername?: string): Promise<Browser> {
+    const browser = await puppeteerExtra.launch({
+      headless,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process',
+      ],
+    })
+    if (loginUsername) {
+      await this.loadCookiesToBrowser(browser, loginUsername)
     }
-    return this.browser
+    return browser
   }
 
-  async getPage(): Promise<Page> {
-    if (!this.browser) {
+  async getPage(browser?: Browser): Promise<Page> {
+    if (!browser) {
       await this.createBrowser()
     }
 
-    const pages = await this.browser.pages()
+    const pages = await browser.pages()
+    let page: Page = null
+
     if (pages.length > 0) {
-      this.page = pages[0]
+      page = pages[0]
     }
     else {
-      this.page = await this.browser.newPage()
+      page = await browser.newPage()
     }
-    await this.page.setViewport({ width: 1280, height: 800 })
-    await this.page.setExtraHTTPHeaders({
+    await page.setViewport({ width: 1280, height: 800 })
+    await page.setExtraHTTPHeaders({
       'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
     })
-    return this.page
+    return page
   }
 
   async gotoIfChanged(page: Page, url: string) {
@@ -60,14 +54,6 @@ export class InstagramBrowserService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    if (this.page && !this.page.isClosed()) {
-      await this.page.close()
-      this.page = null
-    }
-    if (this.browser) {
-      await this.browser.close()
-      this.browser = null
-    }
   }
 
   private getCookiePath(username: string): string {
@@ -93,7 +79,12 @@ export class InstagramBrowserService implements OnModuleDestroy {
 
   public async saveCookies(browser: Browser, username: string) {
     const cookies = await browser.cookies()
-    fs.writeFileSync(this.getCookiePath(username), JSON.stringify(cookies))
+    const cookiePath = this.getCookiePath(username)
+    const dir = path.dirname(cookiePath)
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true })
+    }
+    fs.writeFileSync(cookiePath, JSON.stringify(cookies))
   }
 }
 

@@ -41,44 +41,27 @@ export class InstagramWorkflowController {
 
   @Post('export-posts-xlsx')
   async exportPostsToXlsx(@Body() dto: WorkflowExportXlsxDto, @Res() res: Response) {
-    // 1. 브라우저 명시적 생성 및 쿠키 적용
-    const browserService = this.loginService.browserService
-    await browserService.createBrowser(false, dto.loginUsername)
-    const page = await browserService.getPage()
+    const browser = await this.loginService.browserService.createBrowser(false)
+    // 쿠키 로드 시도 (username은 'instagram' 등 고정값 또는 실제 사용자명)
+    await this.loginService.browserService.loadCookiesToBrowser(browser, 'instagram')
+    const page = await this.loginService.browserService.getPage(browser)
     await page.goto('https://www.instagram.com')
-    await sleep(await this.getRandomDelayFromSettings())
-    // 2. 로그인 필요 체크 및 로그인
-    const loginStatus = await this.loginService.isLogin(page)
-    if (!loginStatus.isLoggedIn) {
-      const loginResult = await this.loginService.login(
-        { username: dto.loginUsername, password: dto.loginPassword },
-        page,
-      )
-      if (!loginResult.success) {
-        await page.close()
-        throw new HttpException('로그인 실패, 로그인후 사용해주세요', HttpStatus.UNAUTHORIZED)
-      }
-    }
-    await sleep(3000)
     await sleep(await this.getRandomDelayFromSettings())
     // 3. 유저 목록 추출 (검색)
     const searchResult = await this.searchService.search({
       keyword: dto.keyword,
-      loginUsername: dto.loginUsername,
       limit: dto.limit,
       headless: false,
-    })
+    }, page)
     if (!searchResult.success) {
       await page.close()
       throw new HttpException('검색 실패', HttpStatus.BAD_REQUEST)
     }
     // 4. 엑셀 데이터 생성 (id, pw, 대상id, DM내용, 팔로우)
     const rows = searchResult.posts.map(post => ({
-      id: dto.loginUsername,
-      pw: dto.loginPassword,
       targetId: post.owner?.username || '',
-      dm: '', // DM 내용은 워크플로우에서 직접 입력/수정할 수 있도록 빈 값
-      follow: '', // 팔로우 여부도 워크플로우에서 직접 입력/수정할 수 있도록 빈 값
+      dm: '',
+      follow: '',
     }))
     const worksheet = XLSX.utils.json_to_sheet(rows)
     const workbook = XLSX.utils.book_new()
@@ -104,21 +87,12 @@ export class InstagramWorkflowController {
     }
     const firstRow = rows[0] as any
 
-    // 2. 브라우저 명시적 생성 및 쿠키 적용
-    const browserService = this.loginService.browserService
-    await browserService.createBrowser(false, firstRow.id)
-    const page = await browserService.getPage()
+    // 워크플로우: 1. 브라우저 생성 및 로그인페이지 오픈, 2. 1분간 로그인 체크
+    const browser = await this.loginService.browserService.createBrowser(false)
+    await this.loginService.browserService.loadCookiesToBrowser(browser, 'instagram')
+    const page = await this.loginService.browserService.getPage(browser)
     await page.goto('https://www.instagram.com')
     await sleep(await this.getRandomDelayFromSettings())
-    // 3. 로그인 필요 체크 및 로그인
-    const loginStatus = await this.loginService.isLogin(page)
-    if (!loginStatus.isLoggedIn) {
-      const loginResult = await this.loginService.login({ username: firstRow.id, password: firstRow.pw }, page)
-      if (!loginResult.success) {
-        await page.close()
-        throw new HttpException('로그인 실패, 로그인후 사용해주세요', HttpStatus.UNAUTHORIZED)
-      }
-    }
     // 4. 각 행마다 자동 처리 (동일 page 재사용)
     const results = []
     for (const row of rows) {
@@ -127,15 +101,52 @@ export class InstagramWorkflowController {
       let followResult = null
       let dmResult = null
       if (follow === 1 || follow === '1') {
-        followResult = await this.followService.follow({ username: targetId, loginUsername: firstRow.id }, page)
+        followResult = await this.followService.follow({ username: targetId, loginUsername: 'instagram' }, page)
       }
       if (dm) {
-        dmResult = await this.dmService.sendDm({ username: targetId, message: dm, loginUsername: firstRow.id }, page)
+        dmResult = await this.dmService.sendDm({ username: targetId, message: dm, loginUsername: 'instagram' }, page)
       }
       results.push({ targetId, followResult, dmResult })
       await sleep(await this.getRandomDelayFromSettings())
     }
     await page.close()
     res.json({ success: true, results })
+  }
+
+  /**
+   * 인스타그램 수동 로그인 워크플로우 (로그인만 수행)
+   */
+  @Post('login')
+  async workflowLogin(@Res() res: Response) {
+    const browser = await this.loginService.browserService.createBrowser(false)
+    const loginPage = await this.loginService.browserService.getPage(browser)
+
+    try {
+      await loginPage.goto('https://www.instagram.com/accounts/login/', { waitUntil: 'networkidle2' })
+      // 1분 동안 1초마다 로그인 체크
+      const start = Date.now()
+      let isLoggedIn = false
+      while (Date.now() - start < 60000) {
+        await sleep(1000)
+        const url = loginPage.url()
+        if (!url.includes('accounts/login')) {
+          await this.loginService.browserService.saveCookies(loginPage.browserContext().browser(), 'instagram')
+          return { success: true, message: '인스타그램 로그인이 완료되었습니다.', browser, page: loginPage }
+        }
+        isLoggedIn = await this.loginService.checkLoginStatus(loginPage)
+        if (isLoggedIn) {
+          await this.loginService.browserService.saveCookies(loginPage.browserContext().browser(), 'instagram')
+          return { success: true, message: '인스타그램 로그인이 완료되었습니다.', browser, page: loginPage }
+        }
+      }
+      await browser.close()
+      return { success: false, message: '로그인 대기 시간이 초과되었습니다. 1분 내에 로그인해주세요.' }
+    }
+    catch (error) {
+      if (browser) {
+        await browser.close()
+      }
+      return { success: false, message: `로그인 워크플로우 실패: ${error.message}` }
+    }
   }
 }

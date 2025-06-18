@@ -121,7 +121,7 @@ export class InstagramLoginService extends InstagramBaseService {
           await humanClick(localPage, saveBtnSelector)
         }
       }
-      catch (e) {
+      catch {
         // 다이얼로그가 안 뜨면 무시
       }
 
@@ -133,7 +133,7 @@ export class InstagramLoginService extends InstagramBaseService {
         }
         return { success: false, error: '로그인 실패' }
       }
-      catch (error) {
+      catch {
         return { success: false, error: '로그인 실패' }
       }
     }
@@ -180,15 +180,48 @@ export class InstagramLoginService extends InstagramBaseService {
     return { success: true }
   }
 
-  async ensureHome(page?: Page): Promise<void> {
-    let localPage = page
-    if (!localPage) {
-      localPage = await this.browserService.getPage()
+  /**
+   * 수동 로그인을 위한 브라우저 창 열기 (단순히 로그인 페이지만 열고 브라우저 객체 반환)
+   */
+  async openLoginBrowser(): Promise<{ success: boolean, message: string, browser?: any }> {
+    try {
+      const browser = await this.browserService.createBrowser(false)
+      const loginPage: Page = await this.browserService.getPage(browser)
+      await loginPage.goto('https://www.instagram.com/accounts/login/', { waitUntil: 'networkidle2' })
+      return { success: true, message: '인스타그램 로그인 창을 열었습니다.', browser }
     }
-    if (!localPage.url().startsWith('https://www.instagram.com')) {
-      await localPage.goto('https://www.instagram.com')
+    catch (error) {
+      return { success: false, message: `로그인 브라우저 열기 실패: ${error.message}` }
     }
-    if (!page && localPage)
-      await localPage.close()
+  }
+
+  /**
+   * 인스타그램 로그인 상태 확인 (headless)
+   */
+  public async checkLoginStatusApi(): Promise<{ isLoggedIn: boolean, needsLogin: boolean, message: string }> {
+    try {
+      // headless 브라우저로 쿠키 로드 후 인스타그램 로그인 상태 확인
+      const browser = await this.browserService.createBrowser(true)
+      // 쿠키 로드 시도 (username은 'instagram' 등 고정값 또는 실제 사용자명)
+      await this.browserService.loadCookiesToBrowser(browser, 'instagram')
+      const page = await browser.newPage()
+      await page.goto('https://www.instagram.com', { waitUntil: 'networkidle2' })
+      // 로그인 상태 확인
+      const isLoggedIn = await this.checkLoginStatusPage(page)
+      await browser.close()
+      if (isLoggedIn) {
+        return { isLoggedIn: true, needsLogin: false, message: '인스타그램 로그인 상태입니다.' }
+      }
+      else {
+        return { isLoggedIn: false, needsLogin: true, message: '인스타그램 로그인이 필요합니다.' }
+      }
+    }
+    catch (error) {
+      return { isLoggedIn: false, needsLogin: true, message: `로그인 상태 확인 실패: ${error.message}` }
+    }
+  }
+
+  protected async checkLoginStatusPage(page: Page): Promise<boolean> {
+    return await super.checkLoginStatus(page)
   }
 }

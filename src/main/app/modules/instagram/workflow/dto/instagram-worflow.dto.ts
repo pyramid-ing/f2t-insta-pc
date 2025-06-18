@@ -5,14 +5,6 @@ export class WorkflowExportXlsxDto {
   @IsNotEmpty()
   keyword: string
 
-  @IsString()
-  @IsNotEmpty()
-  loginUsername: string
-
-  @IsString()
-  @IsNotEmpty()
-  loginPassword: string
-
   @IsNumber()
   @IsOptional()
   limit?: number
