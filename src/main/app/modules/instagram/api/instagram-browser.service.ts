@@ -56,7 +56,7 @@ export class InstagramBrowserService implements OnModuleDestroy {
   async onModuleDestroy() {
   }
 
-  private getCookiePath(username: string): string {
+  public getCookiePath(username: string): string {
     return path.join(process.env.COOKIE_DIR, 'instagram', getCookieJsonName(username))
   }
 

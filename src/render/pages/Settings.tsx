@@ -51,7 +51,7 @@ const Settings: React.FC = () => {
           items={[
             {
               key: 'delay',
-              label: '딜레이 설정',
+              label: '일반',
               children: <DelaySettings />,
             },
           ]}

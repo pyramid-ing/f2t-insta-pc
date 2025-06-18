@@ -1,3 +1,4 @@
+import * as fs from 'node:fs'
 import { InstagramDmService } from '@main/app/modules/instagram/api/instagram-dm.service'
 import { InstagramFollowService } from '@main/app/modules/instagram/api/instagram-follow.service'
 import { InstagramLoginService } from '@main/app/modules/instagram/api/instagram-login.service'
@@ -42,7 +43,17 @@ export class InstagramWorkflowController {
 
   @Post('export-posts-xlsx')
   async exportPostsToXlsx(@Body() dto: WorkflowExportXlsxDto, @Res() res: Response) {
-    const browser = await this.loginService.browserService.createBrowser(false)
+    // headless 설정 불러오기
+    const setting = await this.settingsService.findByKey('instagram')
+    let headless = true
+    if (setting?.data) {
+      try {
+        const parsed = typeof setting.data === 'string' ? JSON.parse(setting.data) : setting.data
+        headless = parsed.headless ?? true
+      }
+      catch {}
+    }
+    const browser = await this.loginService.browserService.createBrowser(headless)
     try {
       // 쿠키 로드 시도 (username은 'instagram' 등 고정값 또는 실제 사용자명)
       await this.loginService.browserService.loadCookiesToBrowser(browser, 'instagram')
@@ -92,8 +103,17 @@ export class InstagramWorkflowController {
       throw new HttpException('엑셀 데이터가 비어있습니다.', HttpStatus.BAD_REQUEST)
     }
 
-    // 워크플로우: 1. 브라우저 생성 및 로그인페이지 오픈, 2. 1분간 로그인 체크
-    const browser = await this.loginService.browserService.createBrowser(false)
+    // headless 설정 불러오기
+    const setting = await this.settingsService.findByKey('instagram')
+    let headless = true
+    if (setting?.data) {
+      try {
+        const parsed = typeof setting.data === 'string' ? JSON.parse(setting.data) : setting.data
+        headless = parsed.headless ?? true
+      }
+      catch {}
+    }
+    const browser = await this.loginService.browserService.createBrowser(headless)
     try {
       await this.loginService.browserService.loadCookiesToBrowser(browser, 'instagram')
       const page = await this.loginService.browserService.getPage(browser)
@@ -152,6 +172,7 @@ export class InstagramWorkflowController {
    */
   @Post('login')
   async workflowLogin(@Res() res: Response) {
+    // 로그인은 무조건 headless: false
     const browser = await this.loginService.browserService.createBrowser(false)
     const loginPage = await this.loginService.browserService.getPage(browser)
 
@@ -177,6 +198,24 @@ export class InstagramWorkflowController {
     }
     finally {
       await browser.close()
+    }
+  }
+
+  /**
+   * 인스타그램 로그인 쿠키 초기화 (로그아웃)
+   */
+  @Post('logout')
+  async workflowLogout(@Res() res: Response) {
+    try {
+      // 쿠키 파일 경로 (username은 'instagram'으로 고정)
+      const cookiePath = this.loginService.browserService.getCookiePath('instagram')
+      if (fs.existsSync(cookiePath)) {
+        fs.unlinkSync(cookiePath)
+      }
+      return res.json({ success: true, message: '로그인 정보가 초기화되었습니다.' })
+    }
+    catch (error) {
+      return res.status(500).json({ success: false, message: `로그아웃 실패: ${error.message}` })
     }
   }
 }

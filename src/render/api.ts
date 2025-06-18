@@ -117,3 +117,9 @@ export async function workflowInstagramLogin() {
   const res = await axios.post(`${API_BASE_URL}/instagram/workflow/login`)
   return res.data
 }
+
+// 워크플로우 기반 인스타그램 로그아웃(쿠키 삭제)
+export async function workflowInstagramLogout() {
+  const res = await axios.post(`${API_BASE_URL}/instagram/workflow/logout`)
+  return res.data
+}
