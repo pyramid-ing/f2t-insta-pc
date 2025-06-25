@@ -133,8 +133,10 @@ export class InstagramWorkflowController {
       const { targetId, dm } = row as any
       const followResult = null
       let dmResult = null
-      if (dm) {
-        dmResult = await this.dmService.sendDm(ig, { username: targetId, message: dm, loginUsername: igId })
+      // dm 값이 string이 아닐 경우에도 안전하게 변환
+      const dmMessage = typeof dm === 'string' ? dm : (dm ? String(dm) : '')
+      if (dmMessage) {
+        dmResult = await this.dmService.sendDm(ig, { username: targetId, message: dmMessage, loginUsername: igId })
       }
       results.push({ targetId, followResult, dmResult })
       await sleep(await this.getRandomDelayFromSettings())
