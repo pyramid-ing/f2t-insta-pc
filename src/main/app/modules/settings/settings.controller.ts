@@ -16,8 +16,7 @@ export class SettingsController {
     try {
       const setting = await this.settingsService.findByKey('instagram')
       return { success: true, data: setting?.data || {} }
-    }
-    catch (error) {
+    } catch (error) {
       this.logger.error('인스타그램 설정 조회 실패:', error)
       return { success: false, error: error.message }
     }
@@ -28,8 +27,7 @@ export class SettingsController {
     try {
       await this.settingsService.saveByKey('instagram', data)
       return { success: true }
-    }
-    catch (error) {
+    } catch (error) {
       this.logger.error('인스타그램 설정 저장 실패:', error)
       return { success: false, error: error.message }
     }

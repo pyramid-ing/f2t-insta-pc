@@ -39,13 +39,10 @@ export class InstagramLikeService extends InstagramBaseService {
       await humanClick(localPage, 'article section button[aria-label="좋아요"]')
       await localPage.evaluate(() => new Promise(resolve => setTimeout(resolve, 2000)))
       return { success: true }
-    }
-    catch (error) {
+    } catch (error) {
       return { success: false, error: error.message }
-    }
-    finally {
-      if (!page && localPage)
-        await localPage.close()
+    } finally {
+      if (!page && localPage) await localPage.close()
     }
   }
 
@@ -66,13 +63,10 @@ export class InstagramLikeService extends InstagramBaseService {
       await humanClick(localPage, 'article section button[aria-label="좋아요 취소"]')
       await localPage.evaluate(() => new Promise(resolve => setTimeout(resolve, 2000)))
       return { success: true }
-    }
-    catch (error) {
+    } catch (error) {
       return { success: false, error: error.message }
-    }
-    finally {
-      if (!page && localPage)
-        await localPage.close()
+    } finally {
+      if (!page && localPage) await localPage.close()
     }
   }
 }

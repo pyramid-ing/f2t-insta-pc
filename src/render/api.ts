@@ -3,8 +3,7 @@ import axios from 'axios'
 const API_BASE_URL = 'http://localhost:3553'
 
 // 에러 코드 enum
-export enum ErrorCode {
-}
+export enum ErrorCode {}
 
 // 정규화된 에러 응답 타입
 export interface ErrorResponse {
@@ -63,8 +62,7 @@ export function getErrorDetails(error: any): string | undefined {
     for (const [key, value] of Object.entries(details)) {
       if (typeof value === 'boolean') {
         detailStrings.push(`${key}: ${value ? '있음' : '없음'}`)
-      }
-      else if (typeof value === 'string' || typeof value === 'number') {
+      } else if (typeof value === 'string' || typeof value === 'number') {
         detailStrings.push(`${key}: ${value}`)
       }
     }
@@ -76,10 +74,7 @@ export function getErrorDetails(error: any): string | undefined {
 }
 
 // 게시물 엑셀 내보내기
-export async function exportPostsXlsx(data: {
-  keyword: string
-  limit?: number
-}): Promise<Blob> {
+export async function exportPostsXlsx(data: { keyword: string; limit?: number }): Promise<Blob> {
   const res = await axios.post(`${API_BASE_URL}/instagram/workflow/export-posts-xlsx`, data, {
     responseType: 'blob',
   })

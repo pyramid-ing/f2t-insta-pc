@@ -32,8 +32,7 @@ export class InstagramWorkflowController {
         const parsed = typeof setting.data === 'string' ? JSON.parse(setting.data) : setting.data
         minDelay = parsed.minDelay ?? 1000
         maxDelay = parsed.maxDelay ?? 3000
-      }
-      catch {}
+      } catch {}
     }
     return Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay
   }
@@ -45,8 +44,9 @@ export class InstagramWorkflowController {
     let igId: string | undefined, igPw: string | undefined
     let data = setting?.data
     if (typeof data === 'string') {
-      try { data = JSON.parse(data) }
-      catch {}
+      try {
+        data = JSON.parse(data)
+      } catch {}
     }
     const dataObj = data as any
     igId = dataObj?.igId
@@ -103,8 +103,9 @@ export class InstagramWorkflowController {
     let igId: string | undefined, igPw: string | undefined
     let data = setting?.data
     if (typeof data === 'string') {
-      try { data = JSON.parse(data) }
-      catch {}
+      try {
+        data = JSON.parse(data)
+      } catch {}
     }
     const dataObj = data as any
     igId = dataObj?.igId
@@ -137,7 +138,7 @@ export class InstagramWorkflowController {
       const followResult = null
       let dmResult = null
       // dm 값이 string이 아닐 경우에도 안전하게 변환
-      const dmMessage = typeof dm === 'string' ? dm : (dm ? String(dm) : '')
+      const dmMessage = typeof dm === 'string' ? dm : dm ? String(dm) : ''
       if (dmMessage) {
         dmResult = await this.dmService.sendDm(ig, { username: targetId, message: dmMessage, loginUsername: igId })
       }

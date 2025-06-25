@@ -1,6 +1,4 @@
-import { Button, message, Spin } from 'antd'
-import React, { useEffect, useState } from 'react'
-import { checkLoginStatus, workflowInstagramLogin, workflowInstagramLogout } from '../api'
+import React from 'react'
 
 interface RequireInstagramLoginProps {
   children: React.ReactNode

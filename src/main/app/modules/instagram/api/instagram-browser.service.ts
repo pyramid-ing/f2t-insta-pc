@@ -36,8 +36,7 @@ export class InstagramBrowserService implements OnModuleDestroy {
 
     if (pages.length > 0) {
       page = pages[0]
-    }
-    else {
+    } else {
       page = await browser.newPage()
     }
     await page.setViewport({ width: 1280, height: 800 })
@@ -53,8 +52,7 @@ export class InstagramBrowserService implements OnModuleDestroy {
     }
   }
 
-  async onModuleDestroy() {
-  }
+  async onModuleDestroy() {}
 
   public getCookiePath(username: string): string {
     return path.join(process.env.COOKIE_DIR, 'instagram', getCookieJsonName(username))
@@ -70,8 +68,7 @@ export class InstagramBrowserService implements OnModuleDestroy {
       const cookies = JSON.parse(cookiesString)
       await browser.setCookie(...cookies)
       return true
-    }
-    catch (error) {
+    } catch (error) {
       console.error(`쿠키 로드 실패 (Browser, ${username}): ${error.message}`)
       return false
     }

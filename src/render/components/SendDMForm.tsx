@@ -24,15 +24,12 @@ const SendDMForm: React.FC = () => {
             setResult(res)
             if (res.success) {
               message.success('DM 전송이 완료되었습니다.')
-            }
-            else {
+            } else {
               message.error('DM 전송에 실패했습니다.')
             }
-          }
-          catch (e: any) {
+          } catch (e: any) {
             message.error(e.message || 'DM 전송에 실패했습니다.')
-          }
-          finally {
+          } finally {
             setLoading(false)
           }
         }}
@@ -40,7 +37,10 @@ const SendDMForm: React.FC = () => {
       >
         <Form.Item label="엑셀 파일 업로드" required>
           <Upload
-            beforeUpload={(file) => { setFile(file); return false }}
+            beforeUpload={file => {
+              setFile(file)
+              return false
+            }}
             maxCount={1}
             accept=".xlsx"
             showUploadList={!!file}

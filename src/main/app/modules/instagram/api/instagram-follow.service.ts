@@ -36,7 +36,7 @@ export class InstagramFollowService extends InstagramBaseService {
       const followButton = await localPage.evaluateHandle(() => {
         const btns = Array.from(document.querySelectorAll('header button'))
         return (
-          btns.find((btn) => {
+          btns.find(btn => {
             const text = (btn as HTMLElement).innerText?.toLowerCase().trim() || ''
             return text.includes('follow') || text.includes('팔로우')
           }) || null
@@ -48,13 +48,10 @@ export class InstagramFollowService extends InstagramBaseService {
       await humanClick(localPage, followButton)
       await localPage.evaluate(() => new Promise(resolve => setTimeout(resolve, 2000)))
       return { success: true }
-    }
-    catch (error) {
+    } catch (error) {
       return { success: false, error: error.message }
-    }
-    finally {
-      if (!page && localPage)
-        await localPage.close()
+    } finally {
+      if (!page && localPage) await localPage.close()
     }
   }
 
@@ -72,7 +69,7 @@ export class InstagramFollowService extends InstagramBaseService {
       const followingButton = await localPage.evaluateHandle(() => {
         const btns = Array.from(document.querySelectorAll('header button'))
         return (
-          btns.find((btn) => {
+          btns.find(btn => {
             const text = (btn as HTMLElement).innerText?.toLowerCase().trim() || ''
             return text.includes('following') || text.includes('팔로잉')
           }) || null
@@ -89,7 +86,7 @@ export class InstagramFollowService extends InstagramBaseService {
           document.querySelectorAll('div[role="dialog"] button, div[role="dialog"] [role="button"]'),
         )
         return (
-          btns.find((btn) => {
+          btns.find(btn => {
             const text = (btn as HTMLElement).innerText?.toLowerCase().trim() || ''
             return text.includes('unfollow') || text.includes('팔로우 취소')
           }) || null
@@ -100,13 +97,10 @@ export class InstagramFollowService extends InstagramBaseService {
       }
       await localPage.evaluate(() => new Promise(resolve => setTimeout(resolve, 2000)))
       return { success: true }
-    }
-    catch (error) {
+    } catch (error) {
       return { success: false, error: error.message }
-    }
-    finally {
-      if (!page && localPage)
-        await localPage.close()
+    } finally {
+      if (!page && localPage) await localPage.close()
     }
   }
 
@@ -123,19 +117,16 @@ export class InstagramFollowService extends InstagramBaseService {
       // 텍스트 기반으로 팔로잉 상태 버튼 찾기 (영어/한글 모두 지원)
       const isFollowing = await localPage.evaluate(() => {
         const btns = Array.from(document.querySelectorAll('button'))
-        return btns.some((btn) => {
+        return btns.some(btn => {
           const text = (btn as HTMLElement).innerText?.toLowerCase().trim() || ''
           return text.includes('following') || text.includes('팔로잉')
         })
       })
       return isFollowing
-    }
-    catch (error) {
+    } catch (error) {
       throw new Error(`팔로우 상태 확인 실패: ${error.message}`)
-    }
-    finally {
-      if (!page && localPage)
-        await localPage.close()
+    } finally {
+      if (!page && localPage) await localPage.close()
     }
   }
 }

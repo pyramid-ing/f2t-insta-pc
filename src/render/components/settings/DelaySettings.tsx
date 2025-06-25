@@ -19,11 +19,9 @@ const DelaySettings: React.FC = () => {
             headless: res.data.headless === undefined ? true : !res.data.headless,
           })
         }
-      }
-      catch {
+      } catch {
         message.error('설정 불러오기 실패')
-      }
-      finally {
+      } finally {
         setLoading(false)
       }
     }
@@ -31,7 +29,7 @@ const DelaySettings: React.FC = () => {
   }, [form])
 
   // 저장
-  const onFinish = async (values: { minDelay: number, maxDelay: number, headless: boolean }) => {
+  const onFinish = async (values: { minDelay: number; maxDelay: number; headless: boolean }) => {
     setLoading(true)
     try {
       // headless 값을 반대로 변환하여 저장 (UI: true=보임, 저장: false)
@@ -41,27 +39,25 @@ const DelaySettings: React.FC = () => {
       })
       if (res.success) {
         message.success('딜레이 설정이 저장되었습니다.')
-      }
-      else {
+      } else {
         message.error('저장 실패')
       }
-    }
-    catch {
+    } catch {
       message.error('딜레이 설정 저장에 실패했습니다.')
-    }
-    finally {
+    } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      background: '#fff',
-      margin: 0,
-      padding: 0,
-      width: '100%',
-    }}
+    <div
+      style={{
+        display: 'flex',
+        background: '#fff',
+        margin: 0,
+        padding: 0,
+        width: '100%',
+      }}
     >
       <Form
         form={form}
@@ -70,10 +66,18 @@ const DelaySettings: React.FC = () => {
         style={{ minWidth: 300 }}
         initialValues={{ minDelay: 1000, maxDelay: 3000, headless: true }}
       >
-        <Form.Item label="최소 딜레이 (ms)" name="minDelay" rules={[{ required: true, message: '최소 딜레이를 입력하세요.' }]}>
+        <Form.Item
+          label="최소 딜레이 (ms)"
+          name="minDelay"
+          rules={[{ required: true, message: '최소 딜레이를 입력하세요.' }]}
+        >
           <InputNumber min={0} step={100} style={{ width: '100%' }} />
         </Form.Item>
-        <Form.Item label="최대 딜레이 (ms)" name="maxDelay" rules={[{ required: true, message: '최대 딜레이를 입력하세요.' }]}>
+        <Form.Item
+          label="최대 딜레이 (ms)"
+          name="maxDelay"
+          rules={[{ required: true, message: '최대 딜레이를 입력하세요.' }]}
+        >
           <InputNumber min={0} step={100} style={{ width: '100%' }} />
         </Form.Item>
         <Form.Item label="창보기 모드" name="headless" valuePropName="checked">

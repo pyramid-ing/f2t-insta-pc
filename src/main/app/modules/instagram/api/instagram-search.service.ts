@@ -59,8 +59,7 @@ export class InstagramSearchService {
         users,
         tags: [],
       }
-    }
-    catch (error) {
+    } catch (error) {
       return { success: false, error: error.message, posts: [], users: [], tags: [] }
     }
   }

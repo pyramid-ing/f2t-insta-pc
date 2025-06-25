@@ -10,7 +10,7 @@ import SettingsPage from './Settings'
 const { Sider, Content } = Layout
 
 const StyledLayout = styled(Layout)`
-    width: 100%;
+  width: 100%;
   min-height: 100vh;
   height: 100vh;
 `
@@ -42,9 +42,8 @@ const App: React.FC = () => {
     // 백엔드 포트 확인
     window.electronAPI
       .getBackendPort()
-      .then((port) => {
-      })
-      .catch((error) => {
+      .then(port => {})
+      .catch(error => {
         console.error('백엔드 포트 확인 실패:', error)
       })
   }, [])
@@ -76,8 +75,16 @@ const App: React.FC = () => {
           <Routes>
             <Route
               path="/"
-              element={(
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              element={
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <Tabs
                     defaultActiveKey="send-dm"
                     style={{ width: 500, maxWidth: '90vw' }}
@@ -95,7 +102,7 @@ const App: React.FC = () => {
                     ]}
                   />
                 </div>
-              )}
+              }
             />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>

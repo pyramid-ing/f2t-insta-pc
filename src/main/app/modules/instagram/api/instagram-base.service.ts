@@ -30,7 +30,7 @@ export class InstagramBaseService {
         ...document.querySelectorAll('button div'),
         ...document.querySelectorAll('button'),
       ]
-      return !elements.some((el) => {
+      return !elements.some(el => {
         const text = el.textContent?.toLowerCase().trim() || ''
         return text === 'log in' || text === '로그인'
       })

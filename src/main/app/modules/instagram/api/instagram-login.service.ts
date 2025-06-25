@@ -68,16 +68,14 @@ export class InstagramLoginService {
       await this.saveSession(username)
       this.currentUsername = username
       return { success: true, userId: loggedInUser.username }
-    }
-    catch (error) {
+    } catch (error) {
       return { success: false, error: error.message }
     }
   }
 
   async signout(params?: { username?: string }): Promise<InstagramActionResponse> {
     const username = params?.username || this.currentUsername
-    if (!username)
-      return { success: false, error: '로그인 정보가 없습니다.' }
+    if (!username) return { success: false, error: '로그인 정보가 없습니다.' }
     const sessionPath = this.getSessionPath(username)
     if (fs.existsSync(sessionPath)) {
       fs.unlinkSync(sessionPath)
@@ -87,25 +85,24 @@ export class InstagramLoginService {
     return { success: false, error: '이미 로그아웃 상태입니다.' }
   }
 
-  async checkLoginStatusApi(params?: { username?: string }): Promise<{ isLoggedIn: boolean, needsLogin: boolean, message: string }> {
+  async checkLoginStatusApi(params?: {
+    username?: string
+  }): Promise<{ isLoggedIn: boolean; needsLogin: boolean; message: string }> {
     const username = params?.username || this.currentUsername
-    if (!username)
-      return { isLoggedIn: false, needsLogin: true, message: '로그인 정보가 없습니다.' }
+    if (!username) return { isLoggedIn: false, needsLogin: true, message: '로그인 정보가 없습니다.' }
     try {
       if (await this.loadSession(username)) {
         const user = await this.ig.account.currentUser()
         return { isLoggedIn: true, needsLogin: false, message: `${user.username}로 로그인됨` }
-      }
-      else {
+      } else {
         return { isLoggedIn: false, needsLogin: true, message: '로그인이 필요합니다.' }
       }
-    }
-    catch (error) {
+    } catch (error) {
       return { isLoggedIn: false, needsLogin: true, message: `로그인 상태 확인 실패: ${error.message}` }
     }
   }
 
-  async openLoginBrowser(): Promise<{ success: boolean, message: string }> {
+  async openLoginBrowser(): Promise<{ success: boolean; message: string }> {
     // headless 브라우저가 아니므로, 별도 브라우저 창을 띄우는 기능은 지원하지 않음
     return { success: false, message: 'instagram-private-api는 브라우저 기반 수동 로그인을 지원하지 않습니다.' }
   }

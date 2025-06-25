@@ -36,8 +36,7 @@ export class InstagramDmService {
       const thread = ig.entity.directThread([userId.toString()])
       await thread.broadcastText(message)
       return { success: true }
-    }
-    catch (error) {
+    } catch (error) {
       return { success: false, error: error.message }
     }
   }

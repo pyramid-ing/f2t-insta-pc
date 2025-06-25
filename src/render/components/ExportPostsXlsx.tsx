@@ -8,7 +8,7 @@ const ExportPostsXlsx: React.FC = () => {
   return (
     <Form
       layout="vertical"
-      onFinish={async (values: { keyword: string, limit?: number }) => {
+      onFinish={async (values: { keyword: string; limit?: number }) => {
         setLoading(true)
         try {
           const blob = await exportPostsXlsx(values)
@@ -21,11 +21,9 @@ const ExportPostsXlsx: React.FC = () => {
           a.remove()
           window.URL.revokeObjectURL(url)
           message.success('엑셀 파일이 다운로드되었습니다.')
-        }
-        catch (e: any) {
+        } catch (e: any) {
           message.error(e.message || '엑셀 내보내기에 실패했습니다.')
-        }
-        finally {
+        } finally {
           setLoading(false)
         }
       }}

@@ -21,8 +21,7 @@ const Settings: React.FC = () => {
 
       // 전역 엔진 설정 로드
       try {
-      }
-      catch (engineError) {
+      } catch (engineError) {
         console.log('전역 엔진 설정 로드 실패 (첫 실행일 수 있음):', engineError)
       }
 
@@ -34,17 +33,15 @@ const Settings: React.FC = () => {
           igPw: res.data.igPw || '',
         })
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error('설정 로드 실패:', error)
       message.error('설정을 불러오는데 실패했습니다.')
-    }
-    finally {
+    } finally {
       setLoading(false)
     }
   }
 
-  const handleSaveLogin = async (values: { igId: string, igPw: string }) => {
+  const handleSaveLogin = async (values: { igId: string; igPw: string }) => {
     setLoading(true)
     try {
       const res = await saveInstagramSettings({ igId: values.igId, igPw: values.igPw })
@@ -85,16 +82,19 @@ const Settings: React.FC = () => {
               key: 'login',
               label: '인스타그램 로그인',
               children: (
-                <Form
-                  form={form}
-                  layout="vertical"
-                  onFinish={handleSaveLogin}
-                  style={{ maxWidth: 400, marginTop: 24 }}
-                >
-                  <Form.Item label="인스타그램 아이디" name="igId" rules={[{ required: true, message: '아이디를 입력하세요.' }]}> 
+                <Form form={form} layout="vertical" onFinish={handleSaveLogin} style={{ maxWidth: 400, marginTop: 24 }}>
+                  <Form.Item
+                    label="인스타그램 아이디"
+                    name="igId"
+                    rules={[{ required: true, message: '아이디를 입력하세요.' }]}
+                  >
                     <Input autoComplete="username" />
                   </Form.Item>
-                  <Form.Item label="비밀번호" name="igPw" rules={[{ required: true, message: '비밀번호를 입력하세요.' }]}> 
+                  <Form.Item
+                    label="비밀번호"
+                    name="igPw"
+                    rules={[{ required: true, message: '비밀번호를 입력하세요.' }]}
+                  >
                     <Input.Password autoComplete="current-password" />
                   </Form.Item>
                   <Form.Item>
