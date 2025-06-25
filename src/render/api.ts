@@ -74,7 +74,7 @@ export function getErrorDetails(error: any): string | undefined {
 }
 
 // 게시물 엑셀 내보내기
-export async function exportPostsXlsx(data: { keyword: string; limit?: number }): Promise<Blob> {
+export async function exportPostsXlsx(data: { keyword: string; limit?: number; orderBy?: string }): Promise<Blob> {
   const res = await axios.post(`${API_BASE_URL}/instagram/workflow/export-posts-xlsx`, data, {
     responseType: 'blob',
   })

@@ -10,6 +10,7 @@ export interface SearchParams {
   loginUsername?: string
   limit?: number
   headless?: boolean
+  orderBy?: string // 'recent' | 'top' | 'places'
 }
 
 @Injectable()
@@ -20,9 +21,13 @@ export class InstagramSearchService {
   ) {}
 
   async search(ig: IgApiClient, params: SearchParams): Promise<InstagramSearchResult> {
-    const { keyword, limit = 10 } = params
+    const { keyword, limit = 10, orderBy = 'recent' } = params
+    // orderBy 값이 허용된 값인지 확인
+    const validOrderBy = ['recent', 'top', 'places'].includes(orderBy)
+      ? (orderBy as 'recent' | 'top' | 'places')
+      : 'recent'
     try {
-      const tagFeed = ig.feed.tags(keyword, 'recent')
+      const tagFeed = ig.feed.tags(keyword, validOrderBy)
       const tagItems = await tagFeed.items()
       const posts: InstagramPost[] = (tagItems.slice(0, limit) || []).map(item => ({
         id: item.id,

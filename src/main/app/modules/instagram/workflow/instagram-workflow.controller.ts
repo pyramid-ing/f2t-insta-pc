@@ -70,6 +70,7 @@ export class InstagramWorkflowController {
       keyword: dto.keyword,
       limit: dto.limit,
       loginUsername: igId,
+      orderBy: dto.orderBy,
     })
     if (!searchResult.success) {
       throw new HttpException('검색 실패', HttpStatus.BAD_REQUEST)

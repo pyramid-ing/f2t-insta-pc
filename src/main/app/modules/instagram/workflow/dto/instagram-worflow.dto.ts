@@ -8,6 +8,10 @@ export class WorkflowExportXlsxDto {
   @IsNumber()
   @IsOptional()
   limit?: number
+
+  @IsString()
+  @IsOptional()
+  orderBy?: string // 'recent' | 'top' 등
 }
 
 // 워크플로우 엑셀 업로드(DM/팔로우) 요청 DTO (엑셀 외 추가 파라미터 필요시 확장)
