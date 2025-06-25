@@ -1,26 +1,21 @@
-import { InstagramDmService } from '@main/app/modules/instagram/api/instagram-dm.service'
-import { InstagramLoginService } from '@main/app/modules/instagram/api/instagram-login.service'
-import { InstagramSearchService } from '@main/app/modules/instagram/api/instagram-search.service'
-import {
-  WorkflowExportXlsxDto,
-  WorkflowSendDmToDto,
-} from '@main/app/modules/instagram/workflow/dto/instagram-worflow.dto'
+import { InstagramApi } from '@main/app/modules/instagram/api/instagram-api'
 import { SettingsService } from '@main/app/modules/settings/settings.service'
 import { sleep } from '@main/app/utils/sleep'
 import { Body, Controller, HttpException, HttpStatus, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { Response } from 'express'
-import { IgApiClient } from 'instagram-private-api'
 import { File as MulterFile } from 'multer'
 import * as XLSX from 'xlsx'
+import {
+  WorkflowExportXlsxDto,
+  WorkflowSendDmToDto,
+} from '@main/app/modules/instagram/workflow/dto/instagram-worflow.dto'
 
 @Controller()
 export class InstagramWorkflowController {
   constructor(
-    private readonly searchService: InstagramSearchService,
-    private readonly dmService: InstagramDmService,
+    private readonly instagramApi: InstagramApi,
     private readonly settingsService: SettingsService,
-    private readonly loginService: InstagramLoginService,
   ) {}
 
   private async getRandomDelayFromSettings(): Promise<number> {
@@ -39,7 +34,6 @@ export class InstagramWorkflowController {
 
   @Post('export-posts-xlsx')
   async exportPostsToXlsx(@Body() dto: WorkflowExportXlsxDto, @Res() res: Response) {
-    // 1. 인스타그램 자동 로그인
     const setting = await this.settingsService.findByKey('instagram')
     let igId: string | undefined, igPw: string | undefined
     let data = setting?.data
@@ -52,46 +46,26 @@ export class InstagramWorkflowController {
     igId = dataObj?.igId
     igPw = dataObj?.igPw
     if (!igId || !igPw) {
-      throw new HttpException('인스타그램 로그인 정보가 필요합니다.', HttpStatus.BAD_REQUEST)
+      throw new HttpException('인스타그램 로그인 정보(아이디/비밀번호)가 필요합니다.', HttpStatus.BAD_REQUEST)
     }
-    const loginStatus = await this.loginService.checkLoginStatusApi({ username: igId })
-    if (!loginStatus.isLoggedIn) {
-      const loginResult = await this.loginService.login({ username: igId, password: igPw })
-      if (!loginResult.success) {
-        throw new HttpException(`인스타그램 자동로그인 실패: ${loginResult.error || ''}`, HttpStatus.BAD_REQUEST)
-      }
+    await this.instagramApi.login(igId, igPw)
+    const accounts = await this.instagramApi.getAccountsByKeyword(dto.keyword)
+    if (!accounts.length) {
+      throw new HttpException(
+        `'${dto.keyword}'(으)로는 인스타그램에서 검색 결과가 없습니다. 다른 키워드를 입력해 주세요.`,
+        HttpStatus.BAD_REQUEST,
+      )
     }
-    // ig 인스턴스 생성 및 세션 로딩
-    const ig = new IgApiClient()
-    ig.state.generateDevice(igId)
-    await this.loginService.loadSessionWithIgInstance(ig, igId)
-    // 3. 유저 목록 추출 (검색)
-    const searchResult = await this.searchService.search(ig, {
-      keyword: dto.keyword,
-      limit: dto.limit,
-      loginUsername: igId,
-      orderBy: dto.orderBy,
-    })
-    if (!searchResult.success) {
-      throw new HttpException('검색 실패', HttpStatus.BAD_REQUEST)
-    }
-    if (!searchResult.posts || searchResult.posts.length === 0) {
-      throw new HttpException(`'${dto.keyword}'(으)로는 검색할 수 없습니다.`, HttpStatus.BAD_REQUEST)
-    }
-    // 4. 엑셀 데이터 생성 (id, pw, 대상id, DM내용, 팔로우)
-    const rows = searchResult.posts.map(post => ({
-      targetId: post.owner?.username || '',
-      dm: '',
-      follow: '',
+    const rows = accounts.map(account => ({
+      유저명: account.fullName,
+      유저ID: account.username,
+      '프로필 링크': `https://instagram.com/${account.username}`,
+      DM: '',
     }))
-    const worksheet = XLSX.utils.json_to_sheet(rows)
+    const worksheet = XLSX.utils.json_to_sheet(rows, { header: ['유저명', '유저 ID', '프로필 링크', 'DM'] })
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
     const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
-    // 파일명에 키워드 적용 (한글 등 특수문자 제거 및 공백은 _로 대체)
-    const safeKeyword = (dto.keyword || '').replace(/[^a-z0-9가-힣]/gi, '_')
-    const filename = `인스타_${safeKeyword}.xlsx`
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     res.send(buffer)
   }
@@ -102,7 +76,6 @@ export class InstagramWorkflowController {
     if (!file) {
       throw new HttpException('엑셀 파일이 필요합니다.', HttpStatus.BAD_REQUEST)
     }
-    // 1. 인스타그램 자동 로그인
     const setting = await this.settingsService.findByKey('instagram')
     let igId: string | undefined, igPw: string | undefined
     let data = setting?.data
@@ -115,39 +88,25 @@ export class InstagramWorkflowController {
     igId = dataObj?.igId
     igPw = dataObj?.igPw
     if (!igId || !igPw) {
-      throw new HttpException('인스타그램 로그인 정보가 필요합니다.', HttpStatus.BAD_REQUEST)
+      throw new HttpException('인스타그램 로그인 정보(아이디/비밀번호)가 필요합니다.', HttpStatus.BAD_REQUEST)
     }
-    const loginStatus = await this.loginService.checkLoginStatusApi({ username: igId })
-    if (!loginStatus.isLoggedIn) {
-      const loginResult = await this.loginService.login({ username: igId, password: igPw })
-      if (!loginResult.success) {
-        throw new HttpException(`인스타그램 자동로그인 실패: ${loginResult.error || ''}`, HttpStatus.BAD_REQUEST)
-      }
-    }
-    // ig 인스턴스 생성 및 세션 로딩
-    const ig = new IgApiClient()
-    ig.state.generateDevice(igId)
-    await this.loginService.loadSessionWithIgInstance(ig, igId)
-    // 2. 엑셀 파싱
+    await this.instagramApi.login(igId, igPw)
     const workbook = XLSX.read(file.buffer, { type: 'buffer' })
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
     const rows = XLSX.utils.sheet_to_json(sheet)
     if (!rows.length) {
       throw new HttpException('엑셀 데이터가 비어있습니다.', HttpStatus.BAD_REQUEST)
     }
-    // 3. 각 행마다 자동 처리
     const results = []
     for (const row of rows) {
-      const { targetId, dm } = row as any
-      const followResult = null
+      const { 유저ID, DM } = row as any
       let dmResult = null
-      // dm 값이 string이 아닐 경우에도 안전하게 변환
-      const dmMessage = typeof dm === 'string' ? dm : dm ? String(dm) : ''
+      const dmMessage = typeof DM === 'string' ? DM : DM ? String(DM) : ''
       if (dmMessage) {
-        dmResult = await this.dmService.sendDm(ig, { username: targetId, message: dmMessage, loginUsername: igId })
+        dmResult = await this.instagramApi.sendDm(유저ID, dmMessage)
+        await sleep(await this.getRandomDelayFromSettings())
       }
-      results.push({ targetId, followResult, dmResult })
-      await sleep(await this.getRandomDelayFromSettings())
+      results.push({ 유저ID, dmResult })
     }
     res.json({ success: true, results })
   }

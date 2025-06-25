@@ -75,10 +75,15 @@ export function getErrorDetails(error: any): string | undefined {
 
 // 게시물 엑셀 내보내기
 export async function exportPostsXlsx(data: { keyword: string; limit?: number; orderBy?: string }): Promise<Blob> {
-  const res = await axios.post(`${API_BASE_URL}/instagram/workflow/export-posts-xlsx`, data, {
-    responseType: 'blob',
-  })
-  return res.data
+  try {
+    const res = await axios.post(`${API_BASE_URL}/instagram/workflow/export-posts-xlsx`, data, {
+      responseType: 'blob',
+    })
+    return res.data
+  } catch (error: any) {
+    const errorMessage = getErrorMessage(error)
+    throw new Error(errorMessage)
+  }
 }
 
 // DM 보내기 (엑셀 업로드)

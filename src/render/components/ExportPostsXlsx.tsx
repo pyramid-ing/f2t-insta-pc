@@ -22,7 +22,7 @@ const ExportPostsXlsx: React.FC = () => {
           window.URL.revokeObjectURL(url)
           message.success('엑셀 파일이 다운로드되었습니다.')
         } catch (e: any) {
-          message.error(e.message || '엑셀 내보내기에 실패했습니다.')
+          message.error(e?.message || '엑셀 내보내기에 실패했습니다.')
         } finally {
           setLoading(false)
         }
