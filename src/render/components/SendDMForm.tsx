@@ -60,7 +60,11 @@ const SendDMForm: React.FC = () => {
           <Table
             dataSource={result.results.map((r: any, idx: number) => ({
               key: idx,
-              targetId: r.유저ID,
+              targetId: (
+                <a href={`https://instagram.com/${r.유저ID}`} target="_blank" rel="noopener noreferrer">
+                  {r.유저명} ({r.유저ID})
+                </a>
+              ),
               success: r.dmResult && !r.dmResult.error ? '성공' : '실패',
               error: r.dmResult?.error || '',
             }))}

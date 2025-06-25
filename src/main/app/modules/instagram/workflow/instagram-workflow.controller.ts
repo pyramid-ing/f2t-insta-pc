@@ -99,7 +99,7 @@ export class InstagramWorkflowController {
     }
     const results = []
     for (const row of rows) {
-      const { 유저ID, DM } = row as any
+      const { 유저ID, DM, 유저명 } = row as any
       let dmResult = null
       const dmMessage = typeof DM === 'string' ? DM : DM ? String(DM) : ''
       try {
@@ -115,7 +115,7 @@ export class InstagramWorkflowController {
       } catch (error) {
         dmResult = { error: error.message }
       }
-      results.push({ 유저ID, dmResult })
+      results.push({ 유저ID, 유저명, dmResult })
     }
     res.json({ success: true, results })
   }
