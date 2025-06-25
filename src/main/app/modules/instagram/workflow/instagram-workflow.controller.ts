@@ -74,6 +74,9 @@ export class InstagramWorkflowController {
     if (!searchResult.success) {
       throw new HttpException('검색 실패', HttpStatus.BAD_REQUEST)
     }
+    if (!searchResult.posts || searchResult.posts.length === 0) {
+      throw new HttpException(`'${dto.keyword}'(으)로는 검색할 수 없습니다.`, HttpStatus.BAD_REQUEST)
+    }
     // 4. 엑셀 데이터 생성 (id, pw, 대상id, DM내용, 팔로우)
     const rows = searchResult.posts.map(post => ({
       targetId: post.owner?.username || '',
