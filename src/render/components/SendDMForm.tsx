@@ -1,5 +1,5 @@
 import { UploadOutlined } from '@ant-design/icons'
-import { Button, Form, message, Upload } from 'antd'
+import { Button, Form, message, Upload, Table } from 'antd'
 import React, { useState } from 'react'
 import { sendDmTo } from '../api'
 
@@ -54,12 +54,25 @@ const SendDMForm: React.FC = () => {
           </Button>
         </Form.Item>
       </Form>
-      {result && (
+      {result && result.results && (
         <div style={{ marginTop: 24 }}>
-          <b>결과:</b>
-          <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4, maxHeight: 200, overflow: 'auto' }}>
-            {JSON.stringify(result, null, 2)}
-          </pre>
+          <b>DM 전송 결과</b>
+          <Table
+            dataSource={result.results.map((r: any, idx: number) => ({
+              key: idx,
+              targetId: r.targetId,
+              success: r.dmResult?.success ? '성공' : '실패',
+              error: r.dmResult?.error || '',
+            }))}
+            columns={[
+              { title: '대상 아이디', dataIndex: 'targetId', key: 'targetId' },
+              { title: 'DM 결과', dataIndex: 'success', key: 'success' },
+              { title: '에러 메시지', dataIndex: 'error', key: 'error' },
+            ]}
+            pagination={false}
+            style={{ marginTop: 12 }}
+            size="small"
+          />
         </div>
       )}
     </div>
