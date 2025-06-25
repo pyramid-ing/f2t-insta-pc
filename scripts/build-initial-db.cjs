@@ -1,28 +1,46 @@
-const { execSync } = require('node:child_process')
-const fs = require('node:fs')
-const path = require('node:path')
+import { execSync } from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const tmpDbPath = path.join(__dirname, '../prisma/tmp-initial.sqlite')
 const resourcesDbPath = path.join(__dirname, '../resources/initial.sqlite')
 
-// 1. 임시 DB 파일이 있으면 삭제
+console.log('=== 초기 DB 빌드 시작 ===')
+
+// 1. 기존 파일들 정리
 if (fs.existsSync(tmpDbPath)) {
   fs.unlinkSync(tmpDbPath)
-  console.log('기존 tmp-initial.sqlite 삭제 완료')
 }
 
-// 2. DATABASE_URL을 임시 DB로 지정해서 초기화
-console.log('임시 DB로 초기화(pnpm db:init) 실행...')
-execSync(`DATABASE_URL="file:${tmpDbPath}" pnpm db:init`, { stdio: 'inherit' })
+// 2. resources 디렉토리 생성
+const resourcesDir = path.dirname(resourcesDbPath)
+if (!fs.existsSync(resourcesDir)) {
+  fs.mkdirSync(resourcesDir, { recursive: true })
+}
 
-// 3. 임시 DB를 resources/initial.sqlite로 복사
+// 3. DATABASE_URL 설정 및 DB 초기화
+process.env.DATABASE_URL = `file:${tmpDbPath}`
+
+console.log('Prisma 초기화 중...')
+execSync('pnpm prisma generate', { stdio: 'inherit' })
+execSync('pnpm prisma migrate deploy', { stdio: 'inherit' })
+execSync('pnpm run db:seed', { stdio: 'inherit' })
+
+// 4. 생성된 DB를 resources로 복사
 if (fs.existsSync(tmpDbPath)) {
   fs.copyFileSync(tmpDbPath, resourcesDbPath)
-  console.log('초기 DB를 resources/initial.sqlite로 복사 완료')
-  // 4. 임시 DB 삭제(선택)
+  console.log(`DB 복사 완료: ${resourcesDbPath}`)
+
+  // 임시 파일 삭제
   fs.unlinkSync(tmpDbPath)
 }
 else {
-  console.error('임시 DB 파일이 생성되지 않았습니다!')
+  console.error('DB 파일 생성 실패')
   process.exit(1)
 }
+
+console.log('=== 초기 DB 빌드 완료 ===')
