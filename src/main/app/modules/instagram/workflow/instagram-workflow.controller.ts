@@ -49,7 +49,7 @@ export class InstagramWorkflowController {
       throw new HttpException('인스타그램 로그인 정보(아이디/비밀번호)가 필요합니다.', HttpStatus.BAD_REQUEST)
     }
     await this.instagramApi.login(igId, igPw)
-    const accounts = await this.instagramApi.getAccountsByKeyword(dto.keyword)
+    const accounts = await this.instagramApi.getAccountsByKeyword(dto.keyword, dto.limit)
     if (!accounts.length) {
       throw new HttpException(
         `'${dto.keyword}'(으)로는 인스타그램에서 검색 결과가 없습니다. 다른 키워드를 입력해 주세요.`,
@@ -62,7 +62,7 @@ export class InstagramWorkflowController {
       '프로필 링크': `https://instagram.com/${account.username}`,
       DM: '',
     }))
-    const worksheet = XLSX.utils.json_to_sheet(rows, { header: ['유저명', '유저 ID', '프로필 링크', 'DM'] })
+    const worksheet = XLSX.utils.json_to_sheet(rows, { header: ['유저명', '유저ID', '프로필 링크', 'DM'] })
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
     const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })

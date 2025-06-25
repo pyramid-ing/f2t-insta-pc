@@ -58,18 +58,23 @@ export class InstagramApi {
     return userInfo
   }
 
-  async getAccountsByKeyword(keyword: string) {
+  async getAccountsByKeyword(keyword: string, minResults: number = 25) {
     const res = this.ig.feed.tags(keyword)
-    const results = await res.items()
-    const accounts = results
-      .filter(post => post && post.user)
-      .map(post => ({
-        username: post.user.username,
-        fullName: post.user.full_name,
-        pk: post.user.pk,
-        isPrivate: post.user.is_private,
-        profilePicUrl: post.user.profile_pic_url,
-      }))
+    let accounts = []
+    do {
+      const results = await res.items()
+      accounts = accounts.concat(
+        results
+          .filter(post => post && post.user)
+          .map(post => ({
+            username: post.user.username,
+            fullName: post.user.full_name,
+            pk: post.user.pk,
+            isPrivate: post.user.is_private,
+            profilePicUrl: post.user.profile_pic_url,
+          })),
+      )
+    } while (accounts.length < minResults && res.isMoreAvailable())
     return accounts
   }
 }
