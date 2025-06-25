@@ -61,7 +61,7 @@ const SendDMForm: React.FC = () => {
             dataSource={result.results.map((r: any, idx: number) => ({
               key: idx,
               targetId: r.유저ID,
-              success: r.dmResult ? '성공' : '실패',
+              success: r.dmResult && !r.dmResult.error ? '성공' : '실패',
               error: r.dmResult?.error || '',
             }))}
             columns={[

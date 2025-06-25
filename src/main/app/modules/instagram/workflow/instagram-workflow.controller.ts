@@ -102,16 +102,18 @@ export class InstagramWorkflowController {
       const { 유저ID, DM } = row as any
       let dmResult = null
       const dmMessage = typeof DM === 'string' ? DM : DM ? String(DM) : ''
-      if (dmMessage) {
-        try {
+      try {
+        if (dmMessage) {
           dmResult = await this.instagramApi.sendDm(유저ID, dmMessage)
           if (!dmResult) {
             throw new Error('등록할 수 없음')
           }
           await sleep(await this.getRandomDelayFromSettings())
-        } catch (error) {
-          dmResult = { error: error.message }
+        } else {
+          throw new Error('DM 메시지를 입력하세요.')
         }
+      } catch (error) {
+        dmResult = { error: error.message }
       }
       results.push({ 유저ID, dmResult })
     }
