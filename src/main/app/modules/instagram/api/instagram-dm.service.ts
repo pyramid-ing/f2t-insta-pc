@@ -19,7 +19,7 @@ export class InstagramDmService {
     private readonly loginService: InstagramLoginService,
   ) {}
 
-  async sendDm(ig: import('instagram-private-api').IgApiClient, params: SendDmParams): Promise<InstagramActionResponse> {
+  async sendDm(ig: IgApiClient, params: SendDmParams): Promise<InstagramActionResponse> {
     const { username, message } = params
     try {
       // 세션 불러오기 (loginService 활용)

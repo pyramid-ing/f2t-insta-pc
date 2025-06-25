@@ -21,7 +21,7 @@ export class InstagramLoginService {
   }
 
   private getSessionPath(username: string) {
-    const cookieDir = process.env.COOKIE_DIR || path.join(process.cwd(), 'cookies')
+    const cookieDir = process.env.COOKIE_DIR
     if (!fs.existsSync(cookieDir)) {
       fs.mkdirSync(cookieDir, { recursive: true })
     }

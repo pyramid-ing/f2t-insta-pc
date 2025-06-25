@@ -12,6 +12,7 @@ export class EnvConfig {
   public static isElectron = process.versions && process.versions.electron
   public static isPackaged = app?.isPackaged || false
   public static userDataPath = EnvConfig.isPackaged ? app.getPath('userData') : process.cwd()
+  public static userDataF2tDataPath = path.join(this.userDataPath, 'f2t_data', 'cookies')
   public static resourcePath = EnvConfig.isPackaged ? process.resourcesPath : process.cwd()
   public static dbPath = EnvConfig.isPackaged ? path.join(EnvConfig.userDataPath, 'app.sqlite') : './db.sqlite'
 
@@ -87,7 +88,7 @@ export class EnvConfig {
     process.env.DATABASE_URL = this.dbUrl
     process.env.PRISMA_QUERY_ENGINE_BINARY = enginePath
     process.env.PRISMA_QUERY_ENGINE_LIBRARY = libPath
-    process.env.COOKIE_DIR = path.join(this.userDataPath, 'cookies')
+    process.env.COOKIE_DIR = this.userDataF2tDataPath
   }
 
   private static initializeDatabase() {
