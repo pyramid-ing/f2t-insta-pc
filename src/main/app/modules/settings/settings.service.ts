@@ -1,5 +1,5 @@
+import { PrismaService } from '@main/app/shared/prisma.service'
 import { Injectable, Logger } from '@nestjs/common'
-import { PrismaService } from 'src/main/app/shared/prisma.service'
 
 @Injectable()
 export class SettingsService {

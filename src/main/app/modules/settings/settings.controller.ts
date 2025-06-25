@@ -1,5 +1,5 @@
+import { SettingsService } from '@main/app/modules/settings/settings.service'
 import { PrismaService } from '@main/app/shared/prisma.service'
-import { SettingsService } from '@main/app/shared/settings.service'
 import { Body, Controller, Get, Logger, Post } from '@nestjs/common'
 
 @Controller('settings')
