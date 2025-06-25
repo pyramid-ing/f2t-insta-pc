@@ -84,7 +84,10 @@ export class InstagramWorkflowController {
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
     const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
-    res.setHeader('Content-Disposition', 'attachment; filename="export.xlsx"')
+    // 파일명에 키워드 적용 (한글 등 특수문자 제거 및 공백은 _로 대체)
+    const safeKeyword = (dto.keyword || '').replace(/[^a-z0-9가-힣]/gi, '_')
+    const filename = `인스타_${safeKeyword}.xlsx`
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     res.send(buffer)
   }
