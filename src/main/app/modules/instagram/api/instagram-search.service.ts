@@ -1,11 +1,8 @@
-import { InstagramBaseService } from '@main/app/modules/instagram/api/instagram-base.service'
-import { InstagramPost, InstagramSearchResult } from '@main/app/modules/instagram/api/interfaces/instagram.interface'
-import { humanClick } from '@main/app/utils/human-actions'
-import { sleep } from '@main/app/utils/sleep'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { Page } from 'puppeteer-core'
-import { InstagramBrowserService } from './instagram-browser.service'
+import { IgApiClient } from 'instagram-private-api'
+import { InstagramLoginService } from './instagram-login.service'
+import { InstagramPost, InstagramSearchResult, InstagramUser } from './interfaces/instagram.interface'
 
 // 검색 관련 파라미터 타입 정의
 export interface SearchParams {
@@ -16,91 +13,54 @@ export interface SearchParams {
 }
 
 @Injectable()
-export class InstagramSearchService extends InstagramBaseService {
+export class InstagramSearchService {
   constructor(
     protected readonly configService: ConfigService,
-    protected readonly browserService: InstagramBrowserService,
-  ) {
-    super(configService, browserService)
-  }
+    private readonly loginService: InstagramLoginService,
+  ) {}
 
-  async search(params: SearchParams, page?: Page): Promise<InstagramSearchResult> {
-    const { keyword, loginUsername, limit = 10 } = params
-    let localPage = page
-    if (!localPage) {
-      localPage = await this.browserService.getPage()
-    }
+  async search(ig: IgApiClient, params: SearchParams): Promise<InstagramSearchResult> {
+    const { keyword, limit = 10 } = params
     try {
-      const searchUrl = `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(keyword)}`
-      await this.browserService.gotoIfChanged(localPage, searchUrl)
-      await localPage.waitForSelector('div[class*="x1qjc9v5"][class*="x972fbf"][class*="x10w94by"]')
-      await humanClick(localPage, 'div[class*="x1qjc9v5"][class*="x972fbf"][class*="x10w94by"]')
-      await localPage.waitForSelector('div[role="dialog"]')
-      await sleep(1000)
-      const posts: InstagramPost[] = []
-      for (let i = 0; i < limit; i++) {
-        try {
-          const post = await localPage.evaluate(() => {
-            const dialog = document.querySelector('div[role="dialog"]')
-            if (!dialog)
-              return null
-            const postUrl = window.location.href
-            const postId = postUrl.split('/p/')?.[1]?.replace('/', '') || ''
-            const img = dialog.querySelector('img[style*="object-fit"]') as HTMLImageElement
-            const ownerLink = dialog.querySelector('header ._aaqt a[role="link"]') as HTMLAnchorElement
-            const ownerImg = dialog.querySelector('header img') as HTMLImageElement
-            const verifiedBadge = dialog.querySelector('[aria-label="인증됨"]')
-            const likeCount = Number.parseInt(dialog.querySelector('section span')?.textContent?.replace(/\D/g, '') || '0')
-            const caption = dialog.querySelector('ul > div')?.textContent || ''
-            const commentCount = Number.parseInt(dialog.querySelector('ul')?.childElementCount?.toString() || '0')
-            return {
-              id: postId,
-              shortcode: postId,
-              displayUrl: img?.src || '',
-              caption,
-              owner: {
-                id: ownerLink?.href?.split('/')?.filter(Boolean)?.pop() || '',
-                username: ownerLink?.textContent || '',
-                profilePicUrl: ownerImg?.src || '',
-                isPrivate: false,
-                isVerified: !!verifiedBadge,
-              },
-              likeCount,
-              commentCount,
-              timestamp: new Date().toISOString(),
-            }
-          })
-          if (post) {
-            posts.push(post)
-          }
-          await localPage.keyboard.press('ArrowRight')
-          await sleep(1000)
-        }
-        catch (error) {
-          this.logger.error(`포스트 추출 실패: ${error.message}`)
-          break
-        }
-      }
+      const tagFeed = ig.feed.tags(keyword, 'recent')
+      const tagItems = await tagFeed.items()
+      const posts: InstagramPost[] = (tagItems.slice(0, limit) || []).map(item => ({
+        id: item.id,
+        shortcode: item.code,
+        displayUrl: item.image_versions2?.candidates?.[0]?.url || '',
+        caption: item.caption?.text || '',
+        owner: {
+          id: item.user.pk.toString(),
+          username: item.user.username,
+          profilePicUrl: item.user.profile_pic_url,
+          isPrivate: item.user.is_private,
+          isVerified: item.user.is_verified,
+          followersCount: (item.user as any).follower_count ?? undefined,
+          followingCount: (item.user as any).following_count ?? undefined,
+        },
+        likeCount: item.like_count,
+        commentCount: item.comment_count,
+        timestamp: new Date(item.taken_at * 1000).toISOString(),
+      }))
+      // 유저 검색
+      const userResults = await ig.user.search(keyword)
+      const users: InstagramUser[] = (userResults.users.slice(0, limit) || []).map(user => ({
+        id: user.pk.toString(),
+        username: user.username,
+        profilePicUrl: user.profile_pic_url,
+        isPrivate: user.is_private,
+        isVerified: user.is_verified,
+        followersCount: user.follower_count,
+        followingCount: (user as any).following_count ?? undefined,
+      }))
       return {
         success: true,
         posts,
-        users: [],
+        users,
         tags: [],
       }
-    }
-    catch (error) {
-      this.logger.error(`검색 실패 (${keyword}): ${error.message}`)
-      return {
-        success: false,
-        error: error.message,
-        posts: [],
-        users: [],
-        tags: [],
-      }
-    }
-    finally {
-      if (!page && localPage)
-        await localPage.close()
+    } catch (error) {
+      return { success: false, error: error.message, posts: [], users: [], tags: [] }
     }
   }
 }

@@ -1,11 +1,8 @@
-import { InstagramBaseService } from '@main/app/modules/instagram/api/instagram-base.service'
-import { InstagramActionResponse } from '@main/app/modules/instagram/api/interfaces/instagram.interface'
-import { humanClick, humanType } from '@main/app/utils/human-actions'
-import { sleep } from '@main/app/utils/sleep'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { Page } from 'puppeteer-core'
-import { InstagramBrowserService } from './instagram-browser.service'
+import { IgApiClient } from 'instagram-private-api'
+import { InstagramLoginService } from './instagram-login.service'
+import { InstagramActionResponse } from './interfaces/instagram.interface'
 
 // DM 파라미터 타입 정의
 export interface SendDmParams {
@@ -16,69 +13,32 @@ export interface SendDmParams {
 }
 
 @Injectable()
-export class InstagramDmService extends InstagramBaseService {
+export class InstagramDmService {
   constructor(
     protected readonly configService: ConfigService,
-    protected readonly browserService: InstagramBrowserService,
-  ) {
-    super(configService, browserService)
-  }
+    private readonly loginService: InstagramLoginService,
+  ) {}
 
-  async sendDm(params: SendDmParams, page?: Page): Promise<InstagramActionResponse> {
-    const { username, message, loginUsername } = params
-    let localPage = page
-    if (!localPage) {
-      localPage = await this.browserService.getPage()
-    }
+  async sendDm(ig: import('instagram-private-api').IgApiClient, params: SendDmParams): Promise<InstagramActionResponse> {
+    const { username, message } = params
     try {
-      await this.ensureLogin(localPage)
-      await this.browserService.gotoIfChanged(localPage, `https://www.instagram.com/${username}`)
-      await localPage.waitForSelector('header div[role="button"]')
-      await sleep(2000)
-      const msgBtnHandle = await localPage.evaluateHandle(() => {
-        const buttons = Array.from(document.querySelectorAll('header div[role="button"]'))
-        return (
-          buttons.find((btn) => {
-            const text = btn.textContent?.trim()
-            return text === '메시지 보내기' || text === 'Message'
-          }) || null
-        )
-      })
-      if (!msgBtnHandle)
-        throw new Error('메시지 보내기 버튼을 찾을 수 없습니다.')
-      await humanClick(localPage, msgBtnHandle)
-      await page.waitForNavigation({ waitUntil: 'networkidle2' })
-      await sleep(2000)
-      await localPage.evaluate(() => {
-        const dialog = document.querySelector('div[role="dialog"]')
-        if (dialog) {
-          const buttons = Array.from(dialog.querySelectorAll('button'))
-          for (const btn of buttons) {
-            const text = btn.textContent?.trim()
-            if (text === '나중에 하기' || text.toLowerCase() === 'not now') {
-              ;(btn as HTMLElement).click()
-              break
-            }
-          }
-        }
-      })
-      await localPage.waitForSelector('[contenteditable="true"]')
-      await sleep(1000)
-      await humanClick(localPage, '[contenteditable="true"]')
-      await sleep(500)
-      await humanType(localPage, '[contenteditable="true"]', message)
-      await sleep(500)
-      await localPage.keyboard.press('Enter')
-      await sleep(2000)
+      // 세션 불러오기 (loginService 활용)
+      if (!(await this.loginService.loadSession(params.loginUsername || 'instagram'))) {
+        return { success: false, error: '로그인이 필요합니다.' }
+      }
+      // 대상 유저 정보 조회
+      const userResult = await ig.user.searchExact(username)
+      if (!userResult) {
+        return { success: false, error: '사용자를 찾을 수 없습니다.' }
+      }
+      const userId = userResult.pk
+      // DM 전송
+      const thread = ig.entity.directThread([userId.toString()])
+      await thread.broadcastText(message)
       return { success: true }
     }
     catch (error) {
-      this.logger.error(`DM 전송 실패 (${username}): ${error.message}`)
       return { success: false, error: error.message }
-    }
-    finally {
-      if (!page && localPage)
-        await localPage.close()
     }
   }
 }

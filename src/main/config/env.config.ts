@@ -24,6 +24,8 @@ export class EnvConfig {
     LoggerConfig.initialize()
 
     this.setupEngineNames()
+    // dev, prod 모두에서 크롬 경로 환경변수 설정
+    process.env.PUPPETEER_EXECUTABLE_PATH = this.getDefaultChromePath()
     if (this.isPackaged) {
       this.setupPackagedEnvironment()
     }
@@ -78,7 +80,6 @@ export class EnvConfig {
     process.env.DATABASE_URL = this.dbUrl
     process.env.PRISMA_QUERY_ENGINE_BINARY = enginePath
     process.env.PRISMA_QUERY_ENGINE_LIBRARY = libPath
-    process.env.PUPPETEER_EXECUTABLE_PATH = this.getDefaultChromePath()
     process.env.COOKIE_DIR = path.join(this.resourcePath, 'cookies')
   }
 
