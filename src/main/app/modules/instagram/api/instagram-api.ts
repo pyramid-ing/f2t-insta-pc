@@ -1,26 +1,23 @@
 import { Injectable } from '@nestjs/common'
 import { IgApiClient } from 'instagram-private-api'
-import * as fs from 'fs'
-import * as path from 'path'
-
-const SESSION_PATH = path.join(__dirname, 'ig-session.json')
+import { CookieService } from '@main/app/utils/cookie.service'
 
 @Injectable()
 export class InstagramApi {
   private ig: IgApiClient
 
-  constructor() {
+  constructor(private readonly cookieService: CookieService) {
     this.ig = new IgApiClient()
   }
 
-  async saveSession() {
+  async saveSession(username: string) {
     const state = await this.ig.state.serialize()
-    fs.writeFileSync(SESSION_PATH, JSON.stringify(state))
+    this.cookieService.saveCookies('instagram', username, state)
   }
 
-  async loadSession() {
-    if (fs.existsSync(SESSION_PATH)) {
-      const savedState = JSON.parse(fs.readFileSync(SESSION_PATH, 'utf-8'))
+  async loadSession(username: string) {
+    const savedState = this.cookieService.loadCookies('instagram', username)
+    if (savedState) {
       await this.ig.state.deserialize(savedState)
       return true
     }
@@ -28,7 +25,7 @@ export class InstagramApi {
   }
 
   async login(username: string, password: string) {
-    if (await this.loadSession()) {
+    if (await this.loadSession(username)) {
       console.log('세션에서 로그인 정보 불러옴')
       return
     }
@@ -36,7 +33,7 @@ export class InstagramApi {
     await this.ig.simulate.preLoginFlow()
     const loggedInUser = await this.ig.account.login(username, password)
     console.log('로그인 성공:', loggedInUser.username)
-    await this.saveSession()
+    await this.saveSession(username)
     return loggedInUser
   }
 
