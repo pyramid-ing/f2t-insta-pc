@@ -35,4 +35,4 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ onSuccess }) => {
   )
 }
 
-export default ChallengeForm 
+export default ChallengeForm

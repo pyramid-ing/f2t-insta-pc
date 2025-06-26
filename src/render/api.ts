@@ -1,6 +1,11 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:3553'
+const apiClient = axios.create({
+  baseURL: 'http://localhost:3553',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
 
 // 에러 코드 enum
 export enum ErrorCode {}
@@ -76,7 +81,7 @@ export function getErrorDetails(error: any): string | undefined {
 // 게시물 엑셀 내보내기
 export async function exportPostsXlsx(data: { keyword: string; limit?: number; orderBy?: string }): Promise<Blob> {
   try {
-    const res = await axios.post(`${API_BASE_URL}/instagram/workflow/export-posts-xlsx`, data, {
+    const res = await apiClient.post('/instagram/workflow/export-posts-xlsx', data, {
       responseType: 'blob',
     })
     return res.data
@@ -90,19 +95,19 @@ export async function exportPostsXlsx(data: { keyword: string; limit?: number; o
 export async function sendDmTo(file: File): Promise<any> {
   const formData = new FormData()
   formData.append('file', file)
-  const res = await axios.post(`${API_BASE_URL}/instagram/workflow/send-dm-to`, formData)
+  const res = await apiClient.post('/instagram/workflow/send-dm-to', formData)
   return res.data
 }
 
 // 인스타그램 설정 불러오기
 export async function getInstagramSettings() {
-  const res = await axios.get(`${API_BASE_URL}/settings/instagram`)
+  const res = await apiClient.get('/settings/instagram')
   return res.data
 }
 
 // 인스타그램 설정 저장
 export async function saveInstagramSettings(data: any) {
-  const res = await axios.post(`${API_BASE_URL}/settings/instagram`, data)
+  const res = await apiClient.post('/settings/instagram', data)
   return res.data
 }
 

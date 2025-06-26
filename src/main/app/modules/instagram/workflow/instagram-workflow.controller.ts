@@ -120,7 +120,9 @@ export class InstagramWorkflowController {
     try {
       res.json({ success: true, results })
     } catch (error) {
-      res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: error.message || '알 수 없는 오류가 발생했습니다.' })
+      res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ success: false, error: error.message || '알 수 없는 오류가 발생했습니다.' })
     }
   }
 }
