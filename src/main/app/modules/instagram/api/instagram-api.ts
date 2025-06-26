@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { IgApiClient } from 'instagram-private-api'
+import { IgApiClient, IgCheckpointError } from 'instagram-private-api'
 import { CookieService } from '@main/app/utils/cookie.service'
 
 @Injectable()
@@ -25,16 +25,40 @@ export class InstagramApi {
   }
 
   async login(username: string, password: string) {
-    if (await this.loadSession(username)) {
-      console.log('세션에서 로그인 정보 불러옴')
-      return
+    try {
+      if (await this.loadSession(username)) {
+        console.log('세션에서 로그인 정보 불러옴')
+        return
+      }
+      this.ig.state.generateDevice(username)
+      await this.ig.simulate.preLoginFlow()
+      const loggedInUser = await this.ig.account.login(username, password)
+      console.log('로그인 성공:', loggedInUser.username)
+      await this.saveSession(username)
+      return loggedInUser
+    } catch (error) {
+      if (error instanceof IgCheckpointError) {
+        console.log(this.ig.state.checkpoint)
+        await this.ig.challenge.auto(true)
+        console.log(this.ig.state.checkpoint)
+        return { challengeRequired: true }
+      } else {
+        console.log('로그인 오류:', error)
+        throw error
+      }
     }
-    this.ig.state.generateDevice(username)
-    await this.ig.simulate.preLoginFlow()
-    const loggedInUser = await this.ig.account.login(username, password)
-    console.log('로그인 성공:', loggedInUser.username)
-    await this.saveSession(username)
-    return loggedInUser
+  }
+
+  async verifyChallenge(username: string, code: string) {
+    try {
+      const result = await this.ig.challenge.sendSecurityCode(code)
+      console.log('챌린지 해결:', result)
+      await this.saveSession(username)
+      return result
+    } catch (error) {
+      console.log('챌린지 해결 오류:', error)
+      throw error
+    }
   }
 
   async sendDm(username: string, message: string) {

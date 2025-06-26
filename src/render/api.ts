@@ -123,3 +123,14 @@ export async function workflowInstagramLogout() {
   const res = await axios.post(`${API_BASE_URL}/instagram/workflow/logout`)
   return res.data
 }
+
+export async function verifyChallenge(code: string) {
+  const response = await fetch('/api/verify-challenge', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ code }),
+  })
+  return response.json()
+}
