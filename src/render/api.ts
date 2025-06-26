@@ -106,24 +106,6 @@ export async function saveInstagramSettings(data: any) {
   return res.data
 }
 
-// 인스타그램 로그인 상태 확인 (수동)
-export async function checkLoginStatus() {
-  const res = await axios.get(`${API_BASE_URL}/instagram/api/login-status`)
-  return res.data
-}
-
-// 워크플로우 기반 인스타그램 수동 로그인
-export async function workflowInstagramLogin() {
-  const res = await axios.post(`${API_BASE_URL}/instagram/workflow/login`)
-  return res.data
-}
-
-// 워크플로우 기반 인스타그램 로그아웃(쿠키 삭제)
-export async function workflowInstagramLogout() {
-  const res = await axios.post(`${API_BASE_URL}/instagram/workflow/logout`)
-  return res.data
-}
-
 export async function verifyChallenge(code: string) {
   const response = await fetch('/api/verify-challenge', {
     method: 'POST',

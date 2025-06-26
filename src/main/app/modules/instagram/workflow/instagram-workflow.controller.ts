@@ -117,6 +117,10 @@ export class InstagramWorkflowController {
       }
       results.push({ 유저ID, 유저명, dmResult })
     }
-    res.json({ success: true, results })
+    try {
+      res.json({ success: true, results })
+    } catch (error) {
+      res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: error.message || '알 수 없는 오류가 발생했습니다.' })
+    }
   }
 }

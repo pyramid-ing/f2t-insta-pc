@@ -1,40 +1,19 @@
 import { UploadOutlined } from '@ant-design/icons'
-import { Button, Form, message, Upload, Table, Input } from 'antd'
+import { Button, Form, message, Upload, Table } from 'antd'
 import React, { useState } from 'react'
-import { sendDmTo, verifyChallenge } from '../api'
+import { sendDmTo } from '../api'
+import ChallengeForm from './ChallengeForm'
 
 const SendDMForm: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [result, setResult] = useState<any>(null)
   const [challengeRequired, setChallengeRequired] = useState(false)
-  const [securityCode, setSecurityCode] = useState('')
-
-  const handleChallengeSubmit = async () => {
-    try {
-      const res = await verifyChallenge(securityCode)
-      if (res.success) {
-        message.success('챌린지 해결 성공')
-        setChallengeRequired(false)
-      } else {
-        message.error('챌린지 해결 실패')
-      }
-    } catch (e: any) {
-      message.error(e.message || '챌린지 해결 실패')
-    }
-  }
 
   return (
     <div>
       {challengeRequired ? (
-        <div>
-          <Input
-            placeholder="보안 코드를 입력하세요"
-            value={securityCode}
-            onChange={e => setSecurityCode(e.target.value)}
-          />
-          <Button onClick={handleChallengeSubmit}>코드 제출</Button>
-        </div>
+        <ChallengeForm onSuccess={() => setChallengeRequired(false)} />
       ) : (
         <Form
           layout="vertical"
@@ -56,7 +35,8 @@ const SendDMForm: React.FC = () => {
                 message.error('DM 전송에 실패했습니다.')
               }
             } catch (e: any) {
-              message.error(e.message || 'DM 전송에 실패했습니다.')
+              const errorMessage = e?.message || 'DM 전송에 실패했습니다.'
+              message.error(`에러: ${errorMessage}`)
             } finally {
               setLoading(false)
             }
