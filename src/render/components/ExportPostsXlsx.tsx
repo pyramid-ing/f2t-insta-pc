@@ -39,7 +39,7 @@ const ExportPostsXlsx: React.FC = () => {
         </Select>
       </Form.Item>
       <Form.Item label="검색 개수 (선택)" name="limit">
-        <InputNumber min={1} max={100} style={{ width: '100%' }} placeholder="기본값: 10" />
+        <InputNumber min={1} max={100} style={{ width: '100%' }} placeholder="기본값: 약 50" />
       </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit" loading={loading} block>
