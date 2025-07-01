@@ -10,8 +10,6 @@ import customConfig from './config/custom-config'
 import { CommonModule } from './modules/common/common.module'
 import { PrismaService } from './modules/common/prisma/prisma.service'
 import { InstagramModule } from './modules/instagram/instagram.module'
-import { LogsModule } from './modules/logs/logs.module'
-import { PostJobsModule } from './modules/post-jobs/post-jobs.module'
 import { SettingsModule } from './modules/settings/settings.module'
 import { UtilModule } from './modules/util/util.module'
 
@@ -49,8 +47,6 @@ import { UtilModule } from './modules/util/util.module'
     ScheduleModule.forRoot(),
     CommonModule,
     UtilModule,
-    LogsModule,
-    PostJobsModule,
     InstagramModule,
   ],
   providers: [
