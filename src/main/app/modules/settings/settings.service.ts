@@ -6,21 +6,18 @@ interface AppSettings {
   showBrowserWindow: boolean
 }
 
+export interface GlobalSettings {
+  minDelay?: number
+  maxDelay?: number
+  loginId?: string
+  loginPassword?: string
+}
+
 @Injectable()
 export class SettingsService {
   private readonly logger = new Logger(SettingsService.name)
 
   constructor(private readonly prisma: PrismaService) {}
-
-  // 앱 설정 조회
-  async getAppSettings(): Promise<AppSettings> {
-    const settings = await this.findByKey('app')
-    return (
-      (settings?.data as unknown as AppSettings) || {
-        showBrowserWindow: true,
-      }
-    )
-  }
 
   // 모든 설정 조회
   async findAll() {
@@ -86,6 +83,36 @@ export class SettingsService {
       } else {
         return { valid: false, error: `API 키 검증 실패: ${error.message}` }
       }
+    }
+  }
+
+  // 글로벌 설정 조회 (타입 안전)
+  async getGlobalSettings(): Promise<GlobalSettings> {
+    const setting = await this.findByKey('global')
+    const data = (setting?.data as any) || {}
+
+    return {
+      minDelay: data.minDelay || 3000,
+      maxDelay: data.maxDelay || 8000,
+      loginId: data.loginId || '',
+      loginPassword: data.loginPassword || '',
+    }
+  }
+
+  // 글로벌 설정 저장 (타입 안전)
+  async saveGlobalSettings(settings: Partial<GlobalSettings>): Promise<void> {
+    const currentSettings = await this.getGlobalSettings()
+    const updatedSettings = { ...currentSettings, ...settings }
+    await this.saveByKey('global', updatedSettings)
+  }
+
+  // 딜레이 설정 조회 (global 설정에서)
+  async getDelaySettings(): Promise<{ minDelay: number; maxDelay: number }> {
+    const settings = await this.getGlobalSettings()
+
+    return {
+      minDelay: settings.minDelay || 3000,
+      maxDelay: settings.maxDelay || 8000,
     }
   }
 

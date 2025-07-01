@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common'
 import { SettingsModule } from '../settings/settings.module'
 import { WorkflowModule } from '../workflow/workflow.module'
-import { ThreadsController } from './threads.controller'
-import { ThreadsService } from './threads.service'
+import { InstagramWorkflowController } from './workflow/instagram-workflow.controller'
 
 @Module({
   imports: [SettingsModule, WorkflowModule],
-  controllers: [ThreadsController],
-  providers: [ThreadsService],
+  controllers: [InstagramWorkflowController],
+  providers: [],
+  exports: [],
 })
-export class ThreadsModule {}
+export class InstagramModule {}

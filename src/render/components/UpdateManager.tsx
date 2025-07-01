@@ -1,7 +1,7 @@
 import { CheckOutlined, DownloadOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, Modal, Progress, Space, Typography, notification } from 'antd'
 import React, { useEffect, useState } from 'react'
-import type { DownloadProgress, UpdateInfo, UpdateResult } from '../types/electron'
+import type { DownloadProgress, UpdateInfo, UpdateResult } from 'src/preload/index.d'
 
 const { Text, Paragraph } = Typography
 
@@ -311,14 +311,7 @@ export const UpdateManager: React.FC<UpdateManagerProps> = ({ autoCheck = true }
               format={() => `${Math.round(downloadProgress.percent)}%`}
               strokeColor="#69c0ff"
             />
-            <Text
-              style={{
-                fontSize: 10,
-                color: 'rgba(255, 255, 255, 0.6)',
-                marginTop: 4,
-                display: 'block',
-              }}
-            >
+            <Text style={{ fontSize: 10, color: 'rgba(255, 255, 255, 0.6)', marginTop: 4, display: 'block' }}>
               {formatBytes(downloadProgress.transferred)} / {formatBytes(downloadProgress.total)}
             </Text>
           </div>

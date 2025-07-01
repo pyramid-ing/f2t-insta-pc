@@ -1,12 +1,6 @@
-import type { AppSettings } from './types/settings'
-
-// ------------------------------
-// App Settings API
-// ------------------------------
-
 import axios from 'axios'
 
-export const apiClient = axios.create({
+const apiClient = axios.create({
   baseURL: 'http://localhost:3554',
 })
 
@@ -81,12 +75,64 @@ export function getErrorDetails(error: any): string | undefined {
   return undefined
 }
 
-export async function saveAppSettingsToServer(settings: AppSettings) {
-  const res = await apiClient.post('/settings/app', settings)
+// 게시물 엑셀 내보내기
+export async function exportPostsXlsx(data: { keyword: string; limit?: number; orderBy?: string }): Promise<Blob> {
+  try {
+    const res = await apiClient.post('/instagram/workflow/export-posts-xlsx', data, {
+      responseType: 'blob',
+    })
+    return res.data
+  } catch (error: any) {
+    const errorMessage = getErrorMessage(error)
+    throw new Error(errorMessage)
+  }
+}
+
+// DM 보내기 (엑셀 업로드)
+export async function sendDmTo(file: File): Promise<any> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await apiClient.post('/instagram/workflow/send-dm-to', formData)
   return res.data
 }
 
-export async function getAppSettingsFromServer(): Promise<AppSettings> {
+// Instagram 로그인
+export async function instagramLogin(): Promise<any> {
+  const res = await apiClient.post('/instagram/workflow/login')
+  return res.data
+}
+
+// Instagram 로그아웃
+export async function instagramLogout(): Promise<any> {
+  const res = await apiClient.post('/instagram/workflow/logout')
+  return res.data
+}
+
+// 글로벌 설정 불러오기 (로그인 정보, 딜레이 설정 포함)
+export async function getGlobalSettings() {
+  const res = await apiClient.get('/settings/global')
+  return res.data
+}
+
+// 글로벌 설정 저장 (로그인 정보, 딜레이 설정 포함)
+export async function saveGlobalSettings(data: {
+  minDelay?: number
+  maxDelay?: number
+  loginId?: string
+  loginPassword?: string
+}) {
+  const res = await apiClient.post('/settings/global', data)
+  return res.data
+}
+
+// 앱 설정 불러오기 (브라우저 창 표시 설정 등)
+export async function getAppSettings() {
   const res = await apiClient.get('/settings/app')
-  return res.data?.data || { showBrowserWindow: true }
+  return res.data
+}
+
+// 앱 설정 저장 (브라우저 창 표시 설정 등)
+export async function saveAppSettings(data: { showBrowserWindow?: boolean }) {
+  const res = await apiClient.post('/settings/app', data)
+  return res.data
 }

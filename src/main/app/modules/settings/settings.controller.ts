@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Logger, Param, Post, Put } from '@nestjs/common'
 import { SettingsService } from 'src/main/app/modules/settings/settings.service'
 import { PrismaService } from '../common/prisma/prisma.service'
+import { GlobalSettingsDto } from './dto/global-settings.dto'
 
 @Controller('/settings')
 export class SettingsController {
@@ -12,10 +13,10 @@ export class SettingsController {
   ) {}
 
   @Get('/global')
-  async getGlobalSettings() {
+  async getGlobalSettingsEndpoint() {
     try {
-      const setting = await this.settingsService.findByKey('global')
-      return { success: true, data: setting?.data || {} }
+      const settings = await this.settingsService.getGlobalSettings()
+      return { success: true, data: settings }
     } catch (error) {
       this.logger.error('글로벌 설정 조회 실패:', error)
       return { success: false, error: error.message }
@@ -23,9 +24,9 @@ export class SettingsController {
   }
 
   @Post('/global')
-  async saveGlobalSettings(@Body() data: any) {
+  async saveGlobalSettingsEndpoint(@Body() data: GlobalSettingsDto) {
     try {
-      await this.settingsService.saveByKey('global', data)
+      await this.settingsService.saveGlobalSettings(data)
       return { success: true }
     } catch (error) {
       this.logger.error('글로벌 설정 저장 실패:', error)

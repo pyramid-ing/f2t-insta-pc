@@ -1,15 +1,15 @@
-interface UpdateInfo {
+export interface UpdateInfo {
   version: string;
   releaseNotes?: string;
 }
 
-interface DownloadProgress {
+export interface DownloadProgress {
   percent: number;
   transferred: number;
   total: number;
 }
 
-interface UpdateResult {
+export interface UpdateResult {
   updateInfo?: any;
   message: string;
   error?: string;
