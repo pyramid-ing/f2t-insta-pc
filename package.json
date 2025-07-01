@@ -54,6 +54,7 @@
     "electron-updater": "^6.6.2",
     "file-type": "^19.6.0",
     "ghost-cursor": "^1.4.1",
+    "instagram-private-api": "^1.46.1",
     "lodash": "^4.17.21",
     "multer": "2.0.1",
     "nest-winston": "^1.10.2",
