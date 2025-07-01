@@ -1,8 +1,8 @@
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
-import type { HttpAdapterHost } from '@nestjs/core'
-import type { ErrorResponse } from 'src/main/filters/error.types'
 import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common'
+import type { HttpAdapterHost } from '@nestjs/core'
 import { AxiosError } from 'axios'
+import type { ErrorResponse } from './error.types'
 import {
   BingAuthError,
   BingConfigError,
@@ -24,7 +24,7 @@ import {
   QuizCrawlingError,
   ServiceError,
   VideoGenerationError,
-} from 'src/main/filters/error.types'
+} from './error.types'
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -392,7 +392,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         const match = line.match(/\((.+)\)/)
         if (match) {
           const path = match[1]
-          const projectPath = path.split('/f2t-insta-pc/').pop()
+          const projectPath = path.split('/f2t-insta-dm-pc/').pop()
           return projectPath ? `at ${projectPath}` : line
         }
         return line

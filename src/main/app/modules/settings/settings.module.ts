@@ -1,10 +1,9 @@
-import { SettingsService } from '@main/app/modules/settings/settings.service'
 import { Module } from '@nestjs/common'
-import { SettingsController } from 'src/main/app/modules/settings/settings.controller'
-import { PrismaService } from 'src/main/app/shared/prisma.service'
+import { SettingsService } from 'src/main/app/modules/settings/settings.service'
+import { SettingsController } from './settings.controller'
 
 @Module({
-  providers: [PrismaService, SettingsService],
+  providers: [SettingsService],
   controllers: [SettingsController],
   exports: [SettingsService],
 })

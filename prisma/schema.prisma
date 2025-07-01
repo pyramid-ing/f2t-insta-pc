@@ -13,3 +13,27 @@ model Settings {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model PostJob {
+  id            Int      @id @default(autoincrement())
+  subject       String?
+  desc          String
+  loginId       String
+  loginPw       String
+  status        String   // "pending" | "completed" | "failed"
+  resultMsg     String?
+  scheduledAt   DateTime
+  postedAt      DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Log {
+  id        String   @id @default(uuid())
+  jobId     String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([jobId])
+}

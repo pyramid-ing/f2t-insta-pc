@@ -1,14 +1,19 @@
-import { join } from 'node:path'
 import { ElectronModule } from '@doubleshot/nest-electron'
-import customConfig from '@main/app/config/custom-config'
-import { InstagramModule } from '@main/app/modules/instagram/instagram.module'
-import { SettingsModule } from '@main/app/modules/settings/settings.module'
-import { PrismaService } from '@main/app/shared/prisma.service'
-import { GlobalExceptionFilter } from '@main/filters/global-exception.filter'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, HttpAdapterHost } from '@nestjs/core'
+import { ScheduleModule } from '@nestjs/schedule'
 import { app, BrowserWindow } from 'electron'
+import { join } from 'node:path'
+import { GlobalExceptionFilter } from '../filters/global-exception.filter'
+import customConfig from './config/custom-config'
+import { CommonModule } from './modules/common/common.module'
+import { PrismaService } from './modules/common/prisma/prisma.service'
+import { LogsModule } from './modules/logs/logs.module'
+import { PostJobsModule } from './modules/post-jobs/post-jobs.module'
+import { SettingsModule } from './modules/settings/settings.module'
+import { ThreadsModule } from './modules/threads/threads.module'
+import { UtilModule } from './modules/util/util.module'
 
 @Module({
   imports: [
@@ -41,7 +46,12 @@ import { app, BrowserWindow } from 'electron'
       isGlobal: true,
     }),
     SettingsModule,
-    InstagramModule,
+    ScheduleModule.forRoot(),
+    CommonModule,
+    UtilModule,
+    ThreadsModule,
+    LogsModule,
+    PostJobsModule,
   ],
   providers: [
     {

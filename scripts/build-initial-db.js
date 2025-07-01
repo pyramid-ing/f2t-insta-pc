@@ -34,11 +34,10 @@ execSync('pnpm run db:seed', { stdio: 'inherit' })
 if (fs.existsSync(tmpDbPath)) {
   fs.copyFileSync(tmpDbPath, resourcesDbPath)
   console.log(`DB 복사 완료: ${resourcesDbPath}`)
-
+  
   // 임시 파일 삭제
   fs.unlinkSync(tmpDbPath)
-}
-else {
+} else {
   console.error('DB 파일 생성 실패')
   process.exit(1)
 }

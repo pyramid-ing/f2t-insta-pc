@@ -1,10 +1,13 @@
+import type { AppSettings } from './types/settings'
+
+// ------------------------------
+// App Settings API
+// ------------------------------
+
 import axios from 'axios'
 
-const apiClient = axios.create({
-  baseURL: 'http://localhost:3553',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+export const apiClient = axios.create({
+  baseURL: 'http://localhost:3554',
 })
 
 // 에러 코드 enum
@@ -78,46 +81,12 @@ export function getErrorDetails(error: any): string | undefined {
   return undefined
 }
 
-// 게시물 엑셀 내보내기
-export async function exportPostsXlsx(data: { keyword: string; limit?: number; orderBy?: string }): Promise<Blob> {
-  try {
-    const res = await apiClient.post('/instagram/workflow/export-posts-xlsx', data, {
-      responseType: 'blob',
-    })
-    return res.data
-  } catch (error: any) {
-    const errorMessage = getErrorMessage(error)
-    throw new Error(errorMessage)
-  }
-}
-
-// DM 보내기 (엑셀 업로드)
-export async function sendDmTo(file: File): Promise<any> {
-  const formData = new FormData()
-  formData.append('file', file)
-  const res = await apiClient.post('/instagram/workflow/send-dm-to', formData)
+export async function saveAppSettingsToServer(settings: AppSettings) {
+  const res = await apiClient.post('/settings/app', settings)
   return res.data
 }
 
-// 인스타그램 설정 불러오기
-export async function getInstagramSettings() {
-  const res = await apiClient.get('/settings/instagram')
-  return res.data
-}
-
-// 인스타그램 설정 저장
-export async function saveInstagramSettings(data: any) {
-  const res = await apiClient.post('/settings/instagram', data)
-  return res.data
-}
-
-export async function verifyChallenge(code: string) {
-  const response = await fetch('/api/verify-challenge', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ code }),
-  })
-  return response.json()
+export async function getAppSettingsFromServer(): Promise<AppSettings> {
+  const res = await apiClient.get('/settings/app')
+  return res.data?.data || { showBrowserWindow: true }
 }

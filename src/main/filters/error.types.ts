@@ -167,7 +167,10 @@ export class BingSubmissionError extends ServiceError {
 
 export class BingConfigError extends ServiceError {
   constructor(message: string, operation: string, configType?: string, additionalInfo?: Record<string, any>) {
-    super(ErrorCode.BING_API_KEY_MISSING, message, 'Bing Config', operation, { configType, ...additionalInfo })
+    super(ErrorCode.BING_API_KEY_MISSING, message, 'Bing Config', operation, {
+      configType,
+      ...additionalInfo,
+    })
     this.name = 'BingConfigError'
   }
 }
@@ -230,14 +233,21 @@ export class DaumSubmissionError extends ServiceError {
     siteUrl?: string,
     additionalInfo?: Record<string, any>,
   ) {
-    super(ErrorCode.DAUM_SUBMISSION_FAILED, message, 'Daum Search', operation, { url, siteUrl, ...additionalInfo })
+    super(ErrorCode.DAUM_SUBMISSION_FAILED, message, 'Daum Search', operation, {
+      url,
+      siteUrl,
+      ...additionalInfo,
+    })
     this.name = 'DaumSubmissionError'
   }
 }
 
 export class DaumConfigError extends ServiceError {
   constructor(message: string, operation: string, configType?: string, additionalInfo?: Record<string, any>) {
-    super(ErrorCode.DAUM_REQUEST_FAILED, message, 'Daum Config', operation, { configType, ...additionalInfo })
+    super(ErrorCode.DAUM_REQUEST_FAILED, message, 'Daum Config', operation, {
+      configType,
+      ...additionalInfo,
+    })
     this.name = 'DaumConfigError'
   }
 }

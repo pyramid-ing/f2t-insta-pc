@@ -3,8 +3,8 @@
  * @see https://www.electron.build/configuration/configuration
  */
 const config = {
-  appId: 'com.f2t.insta',
-  productName: 'winsoft-insta',
+  appId: 'com.winsoft.insta-dm',
+  productName: 'winsoft-insta-dm',
   artifactName: '${productName}-${version}.${ext}',
   directories: {
     output: 'dist/electron',
@@ -14,7 +14,7 @@ const config = {
     {
       provider: 'github',
       owner: 'pyramid-ing',
-      repo: 'f2t-insta-pc',
+      repo: 'insta-dm',
       releaseType: 'release',
     },
   ],

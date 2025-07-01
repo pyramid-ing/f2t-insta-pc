@@ -1,24 +1,27 @@
-import { AppModule } from '@main/app/app.module'
-import { EnvConfig } from '@main/config/env.config'
-import { LoggerConfig } from '@main/config/logger.config'
-import { environment } from '@main/environments/environment'
-import { GlobalExceptionFilter } from '@main/filters/global-exception.filter'
-import { BadRequestException, type ValidationError, ValidationPipe } from '@nestjs/common'
+import 'source-map-support/register'
+
+import type { ValidationError } from '@nestjs/common'
+import { BadRequestException, ValidationPipe } from '@nestjs/common'
 import { HttpAdapterHost, NestFactory } from '@nestjs/core'
 import * as bodyParser from 'body-parser'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { autoUpdater } from 'electron-updater'
+import { readFileSync } from 'fs'
 import { WinstonModule } from 'nest-winston'
 import { utilities as nestWinstonModuleUtilities } from 'nest-winston/dist/winston.utilities'
-import winston from 'winston'
-import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
-import { readFileSync } from 'fs'
+import winston from 'winston'
+import { AppModule } from './app/app.module'
+import { EnvConfig } from './config/env.config'
+import { LoggerConfig } from './config/logger.config'
+import { environment } from './environments/environment'
+import { GlobalExceptionFilter } from './filters/global-exception.filter'
 
 EnvConfig.initialize()
 LoggerConfig.info(process.env.NODE_ENV)
 LoggerConfig.info(process.env.PRISMA_QUERY_ENGINE_BINARY)
 LoggerConfig.info(process.env.PRISMA_QUERY_ENGINE_LIBRARY)
-LoggerConfig.info(process.env.PUPPETEER_EXECUTABLE_PATH)
+LoggerConfig.info(process.env.PLAYWRIGHT_BROWSERS_PATH)
 LoggerConfig.info(process.env.COOKIE_DIR)
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
@@ -237,9 +240,9 @@ async function bootstrap() {
     // Support 10mb csv/json files for importing activities
     app.use(bodyParser.json({ limit: '10mb' }))
 
-    await app.listen(3553)
+    await app.listen(3554)
 
-    console.log('NestJS HTTP server is running on port 3553')
+    console.log('NestJS HTTP server is running on port 3554')
   } catch (error) {
     console.log(error)
     app.quit()

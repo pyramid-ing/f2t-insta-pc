@@ -27,7 +27,7 @@ static/cookies
 
 # Added by Claude Task Master
 # Logs
-logs
+logs/*
 *.log
 dev-debug.log
 # Dependency directories
