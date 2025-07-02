@@ -2,7 +2,15 @@ import { Button, Input, message, Modal, Popconfirm, Popover, Select, Space, Tabl
 import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import type { PostJob } from '../../api'
-import { deletePostJob, getJobLogs, getLatestJobLog, getPostJobs, retryPostJob, type JobLog } from '../../api'
+import {
+  deletePostJob,
+  downloadExportFile,
+  getJobLogs,
+  getLatestJobLog,
+  getPostJobs,
+  retryPostJob,
+  type JobLog,
+} from '../../api'
 import PageContainer from '../../components/shared/PageContainer'
 
 const ResultCell = styled.div`
@@ -370,6 +378,23 @@ const ScheduledPostsTable: React.FC = () => {
     }
   }
 
+  const handleDownload = async (jobId: string, keyword: string) => {
+    try {
+      const blob = await downloadExportFile(jobId)
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `export_${keyword}_${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+      message.success('엑셀 파일이 다운로드되었습니다.')
+    } catch (error: any) {
+      message.error(`다운로드 실패: ${error.message}`)
+    }
+  }
+
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
     if (sorter.field && sorter.order) {
       setSortField(sorter.field)
@@ -429,7 +454,9 @@ const ScheduledPostsTable: React.FC = () => {
             width: 80,
             align: 'center',
             render: (type: string) => (
-              <Tag color={type === 'dm' ? 'blue' : 'green'}>{type === 'dm' ? 'DM' : '포스팅'}</Tag>
+              <Tag color={type === 'dm' ? 'blue' : type === 'export' ? 'purple' : 'green'}>
+                {type === 'dm' ? 'DM' : type === 'export' ? '엑셀추출' : '포스팅'}
+              </Tag>
             ),
           },
           {
@@ -557,6 +584,21 @@ const ScheduledPostsTable: React.FC = () => {
                       style={{ fontSize: '11px' }}
                     >
                       재시도
+                    </Button>
+                  )}
+                  {row.type === 'export' && row.status === 'completed' && (
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() => {
+                        // exportParams에서 keyword 추출
+                        const params = row.exportParams ? JSON.parse(row.exportParams) : {}
+                        const keyword = params.keyword || 'export'
+                        handleDownload(row.id, keyword)
+                      }}
+                      style={{ fontSize: '11px', backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                    >
+                      다운로드
                     </Button>
                   )}
                 </Space>

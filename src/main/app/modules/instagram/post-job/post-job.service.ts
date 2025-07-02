@@ -2,6 +2,8 @@ import { sleep } from '@main/app/utils/sleep'
 import { Injectable, Logger } from '@nestjs/common'
 import { PostJob } from '@prisma/client'
 import _ from 'lodash'
+import * as fs from 'node:fs'
+import path from 'node:path'
 import * as XLSX from 'xlsx'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { SettingsService } from '../../settings/settings.service'
@@ -232,6 +234,8 @@ export class PostJobService {
 
       if (postJob.type === 'dm') {
         await this.handleDmJob(postJob)
+      } else if (postJob.type === 'export') {
+        await this.handleExportJob(postJob)
       } else {
         // 기존 포스팅 로직 (미구현)
         await this.jobLogsService.createJobLog(postJob.id, '포스팅 처리 중...')
@@ -246,6 +250,72 @@ export class PostJobService {
       await this.jobLogsService.createJobLog(postJob.id, `작업 실패: ${error.message}`)
       this.logger.error(`작업 실패: ID ${postJob.id} - ${error.message}`)
     }
+  }
+
+  /**
+   * 엑셀 추출 작업 처리
+   */
+  private async handleExportJob(postJob: PostJob) {
+    if (!postJob.exportParams) {
+      throw new Error('엑셀 추출 파라미터가 없습니다.')
+    }
+
+    const exportParams = JSON.parse(postJob.exportParams)
+    const { keyword, limit, orderBy } = exportParams
+
+    // 인스타그램 로그인
+    await this.jobLogsService.createJobLog(postJob.id, '인스타그램 로그인 중...')
+    await this.instagramApi.login(postJob.loginId, postJob.loginPw)
+    await this.jobLogsService.createJobLog(postJob.id, '인스타그램 로그인 완료')
+
+    // 계정 검색
+    await this.jobLogsService.createJobLog(postJob.id, `키워드 "${keyword}"로 검색 중...`)
+    const accounts = await this.instagramApi.getAccountsByKeyword(keyword, limit)
+
+    if (!accounts.length) {
+      throw new Error(`'${keyword}'(으)로는 인스타그램에서 검색 결과가 없습니다.`)
+    }
+
+    await this.jobLogsService.createJobLog(postJob.id, `${accounts.length}개의 계정을 찾았습니다.`)
+
+    // 엑셀 데이터 생성
+    await this.jobLogsService.createJobLog(postJob.id, '엑셀 파일 생성 중...')
+    const rows = accounts.map(account => ({
+      유저명: account.fullName,
+      유저ID: account.username,
+      '프로필 링크': `https://instagram.com/${account.username}`,
+      DM: '',
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(rows, { header: ['유저명', '유저ID', '프로필 링크', 'DM'] })
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+
+    // 파일 저장
+    const exportsDir = path.join(process.cwd(), 'exports')
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir, { recursive: true })
+    }
+
+    const fileName = `export_${keyword}_${new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')}.xlsx`
+    const filePath = path.join(exportsDir, fileName)
+    fs.writeFileSync(filePath, buffer)
+
+    await this.jobLogsService.createJobLog(postJob.id, `엑셀 파일 저장 완료: ${fileName}`)
+
+    // 작업 완료 처리
+    await this.prismaService.postJob.update({
+      where: { id: postJob.id },
+      data: {
+        status: 'completed',
+        resultMsg: `엑셀 추출 완료 (${accounts.length}개 계정)`,
+        resultFilePath: filePath,
+        postedAt: new Date(),
+      },
+    })
+
+    await this.jobLogsService.createJobLog(postJob.id, '엑셀 추출 작업 완료')
   }
 
   /**
@@ -380,6 +450,38 @@ export class PostJobService {
       success: true,
       message: `${createdJobs.length}개의 DM 전송 작업이 등록되었습니다.`,
       jobs: createdJobs,
+    }
+  }
+
+  // 엑셀 추출 작업 생성
+  async createExportJob(
+    exportParams: { keyword: string; limit?: number; orderBy?: string },
+    scheduledAt?: Date,
+  ): Promise<any> {
+    const globalSettings = await this.settingsService.getGlobalSettings()
+    if (!globalSettings.loginId || !globalSettings.loginPassword) {
+      throw new Error('인스타그램 로그인 정보(아이디/비밀번호)가 필요합니다.')
+    }
+
+    const postJob = await this.prismaService.postJob.create({
+      data: {
+        type: 'export',
+        subject: `엑셀 추출: ${exportParams.keyword}`,
+        desc: `키워드 "${exportParams.keyword}" 검색 결과 엑셀 추출 (최대 ${exportParams.limit || 50}개)`,
+        exportParams: JSON.stringify(exportParams),
+        loginId: globalSettings.loginId,
+        loginPw: globalSettings.loginPassword,
+        status: 'pending',
+        scheduledAt: scheduledAt || new Date(),
+      },
+    })
+
+    await this.jobLogsService.createJobLog(postJob.id, `엑셀 추출 작업 등록 (키워드: ${exportParams.keyword})`)
+
+    return {
+      success: true,
+      message: '엑셀 추출 작업이 등록되었습니다.',
+      job: postJob,
     }
   }
 

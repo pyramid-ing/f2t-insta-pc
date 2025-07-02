@@ -16,16 +16,18 @@ model Settings {
 
 model PostJob {
   id            String   @id @default(uuid())
-  type          String   @default("post")  // "post" | "dm"
+  type          String   @default("post")  // "post" | "dm" | "export"
   subject       String?
   desc          String
   dmMessage     String?  // DM 메시지 (type이 "dm"일 때 사용)
   targetUsers   String?  // JSON 형태로 저장된 대상 유저 목록 (type이 "dm"일 때 사용)
+  exportParams  String?  // JSON 형태로 저장된 엑셀 추출 파라미터 (type이 "export"일 때 사용)
   loginId       String
   loginPw       String
   status        String   // "pending" | "processing" | "completed" | "failed"
   resultMsg     String?
   resultUrl     String?
+  resultFilePath String? // 완료된 엑셀 파일 경로 (type이 "export"일 때 사용)
   scheduledAt   DateTime
   postedAt      DateTime?
   createdAt     DateTime @default(now())

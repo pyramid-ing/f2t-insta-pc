@@ -43,16 +43,18 @@ export interface ErrorResponse {
 // PostJob 타입
 export interface PostJob {
   id: string
-  type: 'post' | 'dm'
+  type: 'post' | 'dm' | 'export'
   subject?: string
   desc: string
   dmMessage?: string
   targetUsers?: string
+  exportParams?: string
   loginId: string
   loginPw: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
   resultMsg?: string
   resultUrl?: string
+  resultFilePath?: string
   scheduledAt: string
   postedAt?: string
   createdAt: string
@@ -182,10 +184,27 @@ export async function exportSampleXlsx(): Promise<Blob> {
   }
 }
 
-// 게시물 엑셀 내보내기
-export async function exportPostsXlsx(data: { keyword: string; limit?: number; orderBy?: string }): Promise<Blob> {
+
+
+// 엑셀 추출 Job 생성 (새로운 비동기 방식)
+export async function createExportJob(data: {
+  keyword: string
+  limit?: number
+  orderBy?: string
+}): Promise<{ success: boolean; message: string; job: PostJob }> {
   try {
-    const res = await apiClient.post('/instagram/workflow/export-posts-xlsx', data, {
+    const res = await apiClient.post('/instagram/workflow/create-export-job', data)
+    return res.data
+  } catch (error: any) {
+    const errorMessage = getErrorMessage(error)
+    throw new Error(errorMessage)
+  }
+}
+
+// 엑셀 파일 다운로드 (Job 완료 후)
+export async function downloadExportFile(jobId: string): Promise<Blob> {
+  try {
+    const res = await apiClient.get(`/instagram/workflow/download-export/${jobId}`, {
       responseType: 'blob',
     })
     return res.data
@@ -195,13 +214,7 @@ export async function exportPostsXlsx(data: { keyword: string; limit?: number; o
   }
 }
 
-// DM 보내기 (엑셀 업로드)
-export async function sendDmTo(file: File): Promise<any> {
-  const formData = new FormData()
-  formData.append('file', file)
-  const res = await apiClient.post('/instagram/workflow/send-dm-to', formData)
-  return res.data
-}
+
 
 // DM 예약 전송 (엑셀 업로드)
 export async function uploadDmSchedule(file: File): Promise<any> {

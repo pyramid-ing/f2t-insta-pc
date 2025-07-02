@@ -1,12 +1,11 @@
 import { UploadOutlined } from '@ant-design/icons'
-import { Button, Form, message, Table, Upload } from 'antd'
+import { Button, Form, message, Upload } from 'antd'
 import React, { useState } from 'react'
-import { sendDmTo } from '../../api'
+import { uploadDmSchedule } from '../../api'
 
 const SendDMForm: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState<File | null>(null)
-  const [result, setResult] = useState<any>(null)
 
   return (
     <div>
@@ -18,17 +17,16 @@ const SendDMForm: React.FC = () => {
             return
           }
           setLoading(true)
-          setResult(null)
           try {
-            const res = await sendDmTo(file)
-            setResult(res)
+            const res = await uploadDmSchedule(file)
             if (res.success) {
-              message.success('DM 전송이 완료되었습니다.')
+              message.success(`${res.message} 작업 관리 페이지에서 진행상황을 확인할 수 있습니다.`)
+              setFile(null) // 업로드 후 파일 초기화
             } else {
-              message.error('DM 전송에 실패했습니다.')
+              message.error(res.message || 'DM 작업 등록에 실패했습니다.')
             }
           } catch (e: any) {
-            const errorMessage = e?.message || 'DM 전송에 실패했습니다.'
+            const errorMessage = e?.message || 'DM 작업 등록에 실패했습니다.'
             message.error(`에러: ${errorMessage}`)
           } finally {
             setLoading(false)
@@ -45,41 +43,19 @@ const SendDMForm: React.FC = () => {
             maxCount={1}
             accept=".xlsx"
             showUploadList={!!file}
+            fileList={file ? [{ uid: '1', name: file.name, status: 'done' } as any] : []}
+            onRemove={() => setFile(null)}
           >
             <Button icon={<UploadOutlined />}>엑셀 파일 선택</Button>
           </Upload>
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading} block>
-            DM 보내기
+            DM 작업 등록
           </Button>
         </Form.Item>
       </Form>
-      {result && result.results && (
-        <div style={{ marginTop: 24 }}>
-          <b>DM 전송 결과</b>
-          <Table
-            dataSource={result.results.map((r: any, idx: number) => ({
-              key: idx,
-              targetId: (
-                <a href={`https://instagram.com/${r.유저ID}`} target="_blank" rel="noopener noreferrer">
-                  {r.fullName} ({r.유저ID})
-                </a>
-              ),
-              success: r.dmResult && !r.dmResult.error ? '성공' : '실패',
-              error: r.dmResult?.error || '',
-            }))}
-            columns={[
-              { title: '대상 아이디', dataIndex: 'targetId', key: 'targetId' },
-              { title: 'DM 결과', dataIndex: 'success', key: 'success' },
-              { title: '에러 메시지', dataIndex: 'error', key: 'error' },
-            ]}
-            pagination={false}
-            style={{ marginTop: 12 }}
-            size="small"
-          />
-        </div>
-      )}
+
     </div>
   )
 }
