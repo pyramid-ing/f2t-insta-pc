@@ -19,17 +19,8 @@ export class InstagramWorkflowController {
   ) {}
 
   private async getRandomDelayFromSettings(): Promise<number> {
-    const setting = await this.settingsService.findByKey('instagram')
-    let minDelay = 1000
-    let maxDelay = 3000
-    if (setting?.data) {
-      try {
-        const parsed = typeof setting.data === 'string' ? JSON.parse(setting.data) : setting.data
-        minDelay = parsed.minDelay ?? 1000
-        maxDelay = parsed.maxDelay ?? 3000
-      } catch {}
-    }
-    return Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay
+    const setting = await this.settingsService.getGlobalSettings()
+    return Math.floor(Math.random() * (setting.maxDelay - setting.minDelay + 1)) + setting.minDelay
   }
 
   @Post('export-posts-xlsx')
