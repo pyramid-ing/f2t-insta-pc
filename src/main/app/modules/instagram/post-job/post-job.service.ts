@@ -197,7 +197,7 @@ export class PostJobService {
         // 테더링이 활성화된 경우 현재 IP 확인
         if (globalSettings.useTethering) {
           this.logger.log('테더링이 활성화됨. 현재 IP 확인 중...')
-          currentIp = this.tetherService.getCurrentIp()
+          currentIp = await this.tetherService.getCurrentIp()
           this.logger.log(`작업 시작 전 IP: ${currentIp.ip}`)
         }
 

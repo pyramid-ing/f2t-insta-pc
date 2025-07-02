@@ -22,9 +22,9 @@ export class TetherController {
   }
 
   @Get('current-ip')
-  getCurrentIp() {
+  async getCurrentIp() {
     try {
-      const result = this.tetherService.getCurrentIp()
+      const result = await this.tetherService.getCurrentIp()
       return {
         success: true,
         data: result,

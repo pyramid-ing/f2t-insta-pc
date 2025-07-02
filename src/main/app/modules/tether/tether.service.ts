@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
+import axios from 'axios'
 import { execSync } from 'child_process'
 import { sleep } from '../../utils/sleep'
 
@@ -6,15 +7,27 @@ import { sleep } from '../../utils/sleep'
 export class TetherService {
   private readonly logger = new Logger(TetherService.name)
 
-  getCurrentIp(): { ip: string } {
+  async getCurrentIp(): Promise<{ ip: string }> {
     try {
-      const ip = execSync('curl -6 ifconfig.co -s', { timeout: 10000 }).toString().trim()
-      this.logger.log(`[IP체크] 현재 IP: ${ip}`)
-      return { ip }
+      const response = await axios.get('https://ifconfig.co/ip', {
+        timeout: 5000,
+      })
+      const ip = response.data.toString().trim()
+
+      if (ip && this.isValidIp(ip)) {
+        return { ip }
+      }
     } catch (e) {
       this.logger.error('[IP체크] IP 조회 실패:', e.message)
       return { ip: '' }
     }
+  }
+
+  private isValidIp(ip: string): boolean {
+    // IPv4 또는 IPv6 패턴 간단 검증
+    const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/
+    const ipv6Pattern = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/
+    return ipv4Pattern.test(ip) || ipv6Pattern.test(ip)
   }
 
   async resetUsbTethering(): Promise<void> {
@@ -36,7 +49,7 @@ export class TetherService {
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         await this.resetUsbTethering()
-        const newIp = this.getCurrentIp()
+        const newIp = await this.getCurrentIp()
 
         this.logger.log(`[IP체크] 이전: ${prevIp.ip} / 새로고침: ${newIp.ip}`)
 
@@ -86,7 +99,7 @@ export class TetherService {
     devices: string[]
   }> {
     const androidConnection = await this.checkAndroidConnection()
-    const currentIp = this.getCurrentIp()
+    const currentIp = await this.getCurrentIp()
 
     return {
       adbConnected: androidConnection.connected,
