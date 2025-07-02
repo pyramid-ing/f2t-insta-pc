@@ -424,6 +424,15 @@ const ScheduledPostsTable: React.FC = () => {
             align: 'center',
           },
           {
+            title: '타입',
+            dataIndex: 'type',
+            width: 80,
+            align: 'center',
+            render: (type: string) => (
+              <Tag color={type === 'dm' ? 'blue' : 'green'}>{type === 'dm' ? 'DM' : '포스팅'}</Tag>
+            ),
+          },
+          {
             title: '제목',
             dataIndex: 'subject',
             width: 300,

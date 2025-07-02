@@ -43,8 +43,11 @@ export interface ErrorResponse {
 // PostJob 타입
 export interface PostJob {
   id: string
+  type: 'post' | 'dm'
   subject?: string
   desc: string
+  dmMessage?: string
+  targetUsers?: string
   loginId: string
   loginPw: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
@@ -180,6 +183,14 @@ export async function sendDmTo(file: File): Promise<any> {
   const formData = new FormData()
   formData.append('file', file)
   const res = await apiClient.post('/instagram/workflow/send-dm-to', formData)
+  return res.data
+}
+
+// DM 예약 전송 (엑셀 업로드)
+export async function uploadDmSchedule(file: File): Promise<any> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await apiClient.post('/post-jobs/dm/upload', formData)
   return res.data
 }
 

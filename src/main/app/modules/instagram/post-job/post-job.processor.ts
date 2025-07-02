@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import { PostJobService } from './post-job.service'
+import { PostJobService } from 'src/main/app/modules/instagram/post-job/post-job.service'
 
 @Injectable()
 export class PostJobProcessor implements OnModuleInit {

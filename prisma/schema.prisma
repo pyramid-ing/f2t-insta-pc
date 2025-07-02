@@ -16,11 +16,14 @@ model Settings {
 
 model PostJob {
   id            String   @id @default(uuid())
+  type          String   @default("post")  // "post" | "dm"
   subject       String?
   desc          String
+  dmMessage     String?  // DM 메시지 (type이 "dm"일 때 사용)
+  targetUsers   String?  // JSON 형태로 저장된 대상 유저 목록 (type이 "dm"일 때 사용)
   loginId       String
   loginPw       String
-  status        String   // "pending" | "completed" | "failed"
+  status        String   // "pending" | "processing" | "completed" | "failed"
   resultMsg     String?
   resultUrl     String?
   scheduledAt   DateTime

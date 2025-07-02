@@ -1,5 +1,6 @@
-import { Controller, Delete, Get, Param, Post, Query } from '@nestjs/common'
-import { PostJobService } from './post-job.service'
+import { Controller, Delete, Get, Param, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { PostJobService } from 'src/main/app/modules/instagram/post-job/post-job.service'
 
 @Controller('post-jobs')
 export class PostJobController {
@@ -20,14 +21,24 @@ export class PostJobController {
     })
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.postJobService.getPostJobWithLogs(id)
+  @Post('dm/upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadDmExcel(@UploadedFile() file: any) {
+    if (!file) {
+      throw new Error('엑셀 파일이 필요합니다.')
+    }
+
+    return this.postJobService.createDmJobsFromExcel(file.buffer)
   }
 
   @Post(':id/retry')
   async retry(@Param('id') id: string) {
     return this.postJobService.retryPostJob(id)
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.postJobService.getPostJobWithLogs(id)
   }
 
   @Delete(':id')
