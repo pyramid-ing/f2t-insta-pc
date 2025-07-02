@@ -22,8 +22,4 @@ export class GlobalSettingsDto {
   @IsOptional()
   @IsBoolean()
   useTethering?: boolean
-
-  @IsOptional()
-  @IsString()
-  tetherInterface?: string
 }

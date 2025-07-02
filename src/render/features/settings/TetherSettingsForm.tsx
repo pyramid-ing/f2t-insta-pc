@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Form, Input, message, Space, Switch, Typography } from 'antd'
+import { Alert, Button, Card, Form, message, Space, Switch, Typography } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { getGlobalSettings, getTetherHealthCheck, resetTethering, saveGlobalSettings } from '../../api'
 
@@ -23,7 +23,6 @@ const TetherSettingsForm: React.FC = () => {
       if (globalSetting) {
         form.setFieldsValue({
           useTethering: globalSetting.useTethering ?? false,
-          tetherInterface: globalSetting.tetherInterface ?? 'enp0s20u2',
         })
       }
     } catch (error) {
@@ -34,14 +33,13 @@ const TetherSettingsForm: React.FC = () => {
     }
   }
 
-  const handleSave = async (values: { useTethering: boolean; tetherInterface: string }) => {
+  const handleSave = async (values: { useTethering: boolean }) => {
     setLoading(true)
     try {
       const globalSetting = await getGlobalSettings()
       const res = await saveGlobalSettings({
         ...globalSetting,
         useTethering: values.useTethering,
-        tetherInterface: values.tetherInterface,
       })
       if (res.success) {
         message.success('테더링 설정이 저장되었습니다.')
@@ -105,7 +103,6 @@ const TetherSettingsForm: React.FC = () => {
         onFinish={handleSave}
         initialValues={{
           useTethering: false,
-          tetherInterface: 'enp0s20u2',
         }}
       >
         <Card size="small" style={{ marginBottom: 24 }}>
@@ -116,15 +113,6 @@ const TetherSettingsForm: React.FC = () => {
             extra="인스타그램 작업 시 안드로이드 테더링을 통한 IP 변경 기능을 사용합니다."
           >
             <Switch />
-          </Form.Item>
-
-          <Form.Item
-            label="테더링 인터페이스"
-            name="tetherInterface"
-            extra="테더링 네트워크 인터페이스 명을 설정합니다. (예: enp0s20u2)"
-            rules={[{ required: true, message: '테더링 인터페이스를 입력하세요.' }]}
-          >
-            <Input placeholder="enp0s20u2" />
           </Form.Item>
         </Card>
 

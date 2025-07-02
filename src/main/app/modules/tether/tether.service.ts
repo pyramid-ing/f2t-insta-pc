@@ -1,8 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { execSync } from 'child_process'
 
-export const TETHER_INTERFACE = 'enp0s20u2' // 환경에 맞게 수정
-
 @Injectable()
 export class TetherService {
   private readonly logger = new Logger(TetherService.name)
@@ -85,7 +83,6 @@ export class TetherService {
     adbConnected: boolean
     currentIp: string
     devices: string[]
-    tetherInterface: string
   }> {
     const androidConnection = await this.checkAndroidConnection()
     const currentIp = this.getCurrentIp()
@@ -94,7 +91,6 @@ export class TetherService {
       adbConnected: androidConnection.connected,
       currentIp: currentIp.ip,
       devices: androidConnection.devices,
-      tetherInterface: TETHER_INTERFACE,
     }
   }
 }

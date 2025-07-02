@@ -213,7 +213,6 @@ export interface GlobalSetting {
   loginId?: string
   loginPassword?: string
   useTethering?: boolean
-  tetherInterface?: string
 }
 
 // 글로벌 설정 불러오기 (로그인 정보, 딜레이 설정 포함)
@@ -239,7 +238,6 @@ export async function getTetherHealthCheck(): Promise<{
     adbConnected: boolean
     currentIp: string
     devices: string[]
-    tetherInterface: string
   }
   error?: string
 }> {

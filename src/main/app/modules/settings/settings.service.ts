@@ -10,7 +10,6 @@ export interface GlobalSettings {
   loginId?: string
   loginPassword?: string
   useTethering?: boolean
-  tetherInterface?: string
 }
 
 @Injectable()
@@ -88,7 +87,6 @@ export class SettingsService {
       loginId: data.loginId || '',
       loginPassword: data.loginPassword || '',
       useTethering: data.useTethering || false,
-      tetherInterface: data.tetherInterface || 'enp0s20u2',
     }
   }
 
