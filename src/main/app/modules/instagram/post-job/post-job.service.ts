@@ -8,7 +8,7 @@ import * as XLSX from 'xlsx'
 import { EnvConfig } from '../../../../config/env.config'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { SettingsService } from '../../settings/settings.service'
-import { CookieService } from '../../util/cookie.service'
+import { TetherService } from '../../tether/tether.service'
 import { InstagramApi } from '../api/instagram-api'
 import { JobLogsService } from '../job-logs/job-logs.service'
 
@@ -20,8 +20,8 @@ export class PostJobService {
     private readonly prismaService: PrismaService,
     private readonly jobLogsService: JobLogsService,
     private readonly settingsService: SettingsService,
-    private readonly cookieService: CookieService,
     private readonly instagramApi: InstagramApi,
+    private readonly tetherService: TetherService,
   ) {}
 
   // 예약 작업 목록 조회 (최신 업데이트가 위로 오게 정렬) - 최신 로그 포함
@@ -192,7 +192,33 @@ export class PostJobService {
       const postJobsForLogin = groupedPostJobs[loginId]
 
       try {
+        let currentIp = null
+
+        // 테더링이 활성화된 경우 현재 IP 확인
+        if (globalSettings.useTethering) {
+          this.logger.log('테더링이 활성화됨. 현재 IP 확인 중...')
+          currentIp = this.tetherService.getCurrentIp()
+          this.logger.log(`작업 시작 전 IP: ${currentIp.ip}`)
+        }
+
         for (const postJob of postJobsForLogin) {
+          // 테더링이 활성화된 경우 작업마다 IP 변경
+          if (globalSettings.useTethering && currentIp) {
+            this.logger.log(`작업 ${postJob.id}: IP 변경 시작`)
+            await this.jobLogsService.createJobLog(postJob.id, `IP 변경 시작 (현재: ${currentIp.ip})`)
+
+            try {
+              const newIp = await this.tetherService.checkIpChanged(currentIp)
+              currentIp = newIp
+              this.logger.log(`작업 ${postJob.id}: IP 변경 완료 (새로운 IP: ${newIp.ip})`)
+              await this.jobLogsService.createJobLog(postJob.id, `IP 변경 완료 (새로운 IP: ${newIp.ip})`)
+            } catch (error) {
+              this.logger.error(`작업 ${postJob.id}: IP 변경 실패 - ${error.message}`)
+              await this.jobLogsService.createJobLog(postJob.id, `IP 변경 실패: ${error.message}`)
+              // IP 변경 실패해도 작업은 계속 진행
+            }
+          }
+
           await this.handlePostJob(postJob)
 
           // 작업 간 딜레이
