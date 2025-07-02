@@ -40,8 +40,13 @@ export class InstagramWorkflowController {
     }
 
     const fileName = path.basename(job.resultFilePath)
+    const asciiFallback = 'export.xlsx'
+
+    // URL-encoded UTF-8 문자열
+    const encodedFileName = encodeURIComponent(fileName).replace(/'/g, '%27')
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
+    res.setHeader('Content-Disposition', `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodedFileName}`)
 
     const fileStream = fs.createReadStream(job.resultFilePath)
     fileStream.pipe(res)

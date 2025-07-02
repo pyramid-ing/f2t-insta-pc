@@ -378,13 +378,12 @@ const ScheduledPostsTable: React.FC = () => {
     }
   }
 
-  const handleDownload = async (jobId: string, keyword: string) => {
+  const handleDownload = async (jobId: string) => {
     try {
       const blob = await downloadExportFile(jobId)
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `export_${keyword}_${new Date().toISOString().slice(0, 10)}.xlsx`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -590,12 +589,7 @@ const ScheduledPostsTable: React.FC = () => {
                     <Button
                       type="primary"
                       size="small"
-                      onClick={() => {
-                        // exportParams에서 keyword 추출
-                        const params = row.exportParams ? JSON.parse(row.exportParams) : {}
-                        const keyword = params.keyword || 'export'
-                        handleDownload(row.id, keyword)
-                      }}
+                      onClick={() => handleDownload(row.id)}
                       style={{ fontSize: '11px', backgroundColor: '#52c41a', borderColor: '#52c41a' }}
                     >
                       다운로드
