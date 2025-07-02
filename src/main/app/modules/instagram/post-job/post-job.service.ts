@@ -194,8 +194,8 @@ export class PostJobService {
 
           // 작업 간 딜레이
           if (postJobsForLogin.length > 1) {
-            this.logger.log(`작업 간 딜레이: ${0}초`)
-            await sleep(0 * 1000)
+            this.logger.log(`작업 간 딜레이: ${globalSettings.taskDelay}초`)
+            await sleep(globalSettings.taskDelay * 1000)
           }
         }
       } catch (error) {
