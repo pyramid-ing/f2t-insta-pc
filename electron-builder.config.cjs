@@ -14,7 +14,7 @@ const config = {
     {
       provider: 'github',
       owner: 'pyramid-ing',
-      repo: 'insta-dm',
+      repo: 'f2t-insta-pc',
       releaseType: 'release',
     },
   ],
