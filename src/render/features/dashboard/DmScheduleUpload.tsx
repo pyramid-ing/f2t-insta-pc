@@ -1,8 +1,7 @@
-import { DownloadOutlined, UploadOutlined } from '@ant-design/icons'
+import { UploadOutlined } from '@ant-design/icons'
 import { uploadDmSchedule } from '@render/api'
-import { Button, Card, message, Space, Upload } from 'antd'
+import { Button, Card, message, Upload } from 'antd'
 import React, { useState } from 'react'
-import * as XLSX from 'xlsx'
 
 const DmScheduleUpload: React.FC = () => {
   const [uploading, setUploading] = useState(false)
@@ -22,59 +21,23 @@ const DmScheduleUpload: React.FC = () => {
     }
   }
 
-  const downloadSampleExcel = () => {
-    // 샘플 데이터
-    const sampleData = [
-      {
-        유저ID: 'sample_user1',
-        DM: '안녕하세요! 샘플 메시지입니다. 🔥',
-        예약날짜: '2025-07-01 14:00',
-      },
-      {
-        유저ID: 'sample_user2',
-        DM: 'Hello! This is a sample DM message.',
-        예약날짜: '2025-07-01 15:30',
-      },
-      {
-        유저ID: 'sample_user3',
-        DM: '예약 없이 즉시 전송할 메시지입니다.',
-        예약날짜: '', // 비어있으면 즉시 전송
-      },
-    ]
-
-    // 엑셀 워크시트 생성
-    const worksheet = XLSX.utils.json_to_sheet(sampleData)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'DM전송목록')
-
-    // 파일 다운로드
-    XLSX.writeFile(workbook, 'DM전송_샘플.xlsx')
-    message.success('샘플 엑셀 파일이 다운로드되었습니다.')
-  }
-
   return (
     <Card title="DM 예약 전송" size="small">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Space>
-            <Upload
-              beforeUpload={file => {
-                handleUpload(file)
-                return false // 자동 업로드 방지
-              }}
-              accept=".xlsx,.xls"
-              showUploadList={false}
-              disabled={uploading}
-            >
-              <Button icon={<UploadOutlined />} loading={uploading} type="primary">
-                엑셀 파일 업로드
-              </Button>
-            </Upload>
-
-            <Button icon={<DownloadOutlined />} onClick={downloadSampleExcel} type="default">
-              샘플 파일 다운로드
+          <Upload
+            beforeUpload={file => {
+              handleUpload(file)
+              return false // 자동 업로드 방지
+            }}
+            accept=".xlsx,.xls"
+            showUploadList={false}
+            disabled={uploading}
+          >
+            <Button icon={<UploadOutlined />} loading={uploading} type="primary">
+              엑셀 파일 업로드
             </Button>
-          </Space>
+          </Upload>
         </div>
 
         <div
