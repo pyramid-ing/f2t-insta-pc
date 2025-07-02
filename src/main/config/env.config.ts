@@ -24,6 +24,11 @@ export class EnvConfig {
 
   public static dbUrl = `file:${EnvConfig.dbPath}`
 
+  // 다운로드 폴더 경로 설정
+  public static exportsDir = EnvConfig.isPackaged
+    ? path.join(EnvConfig.userDataPath, 'exports')
+    : path.join(process.cwd(), 'static', 'exports')
+
   private static engineName = ''
   private static libName = ''
 
@@ -128,6 +133,7 @@ export class EnvConfig {
       isElectron: this.isElectron,
       isPackaged: this.isPackaged,
       resourcePath: this.resourcePath,
+      exportsDir: this.exportsDir,
     }
   }
 }

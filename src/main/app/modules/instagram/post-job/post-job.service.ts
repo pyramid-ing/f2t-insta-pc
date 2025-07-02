@@ -5,6 +5,7 @@ import _ from 'lodash'
 import * as fs from 'node:fs'
 import path from 'node:path'
 import * as XLSX from 'xlsx'
+import { EnvConfig } from '../../../../config/env.config'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { SettingsService } from '../../settings/settings.service'
 import { CookieService } from '../../util/cookie.service'
@@ -293,7 +294,7 @@ export class PostJobService {
     const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
 
     // 파일 저장
-    const exportsDir = path.join(process.cwd(), 'exports')
+    const exportsDir = EnvConfig.exportsDir
     if (!fs.existsSync(exportsDir)) {
       fs.mkdirSync(exportsDir, { recursive: true })
     }
