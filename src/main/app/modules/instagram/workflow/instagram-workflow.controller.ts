@@ -23,6 +23,52 @@ export class InstagramWorkflowController {
     return Math.floor(Math.random() * (setting.maxDelay - setting.minDelay + 1)) + setting.minDelay
   }
 
+  @Post('export-sample-xlsx')
+  async exportSampleXlsx(@Res() res: Response) {
+    // 샘플 데이터 생성
+    const sampleRows = [
+      {
+        유저명: '홍길동',
+        유저ID: 'hong_gildong',
+        '프로필 링크': 'https://instagram.com/hong_gildong',
+        DM: '안녕하세요! 제품에 관심이 있으시면 연락주세요.',
+      },
+      {
+        유저명: '김철수',
+        유저ID: 'kim_chulsoo',
+        '프로필 링크': 'https://instagram.com/kim_chulsoo',
+        DM: '좋은 하루 되세요!',
+      },
+      {
+        유저명: '이영희',
+        유저ID: 'lee_younghee',
+        '프로필 링크': 'https://instagram.com/lee_younghee',
+        DM: '팔로우 감사합니다.',
+      },
+      {
+        유저명: '박민수',
+        유저ID: 'park_minsoo',
+        '프로필 링크': 'https://instagram.com/park_minsoo',
+        DM: '',
+      },
+      {
+        유저명: '최지은',
+        유저ID: 'choi_jieun',
+        '프로필 링크': 'https://instagram.com/choi_jieun',
+        DM: '새로운 소식이 있으면 공유드릴게요!',
+      },
+    ]
+
+    const worksheet = XLSX.utils.json_to_sheet(sampleRows, { header: ['유저명', '유저ID', '프로필 링크', 'DM'] })
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sample')
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    res.setHeader('Content-Disposition', 'attachment; filename="sample_dm_template.xlsx"')
+    res.send(buffer)
+  }
+
   @Post('export-posts-xlsx')
   async exportPostsToXlsx(@Body() dto: WorkflowExportXlsxDto, @Res() res: Response) {
     const setting = await this.settingsService.getGlobalSettings()

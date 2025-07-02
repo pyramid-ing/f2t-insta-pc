@@ -165,6 +165,23 @@ export async function getLatestJobLog(jobId: string): Promise<JobLog | null> {
 // Instagram API
 // ------------------------------
 
+// 샘플 엑셀 다운로드
+export async function exportSampleXlsx(): Promise<Blob> {
+  try {
+    const res = await apiClient.post(
+      '/instagram/workflow/export-sample-xlsx',
+      {},
+      {
+        responseType: 'blob',
+      },
+    )
+    return res.data
+  } catch (error: any) {
+    const errorMessage = getErrorMessage(error)
+    throw new Error(errorMessage)
+  }
+}
+
 // 게시물 엑셀 내보내기
 export async function exportPostsXlsx(data: { keyword: string; limit?: number; orderBy?: string }): Promise<Blob> {
   try {
