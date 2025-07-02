@@ -1,6 +1,6 @@
 import { Button, Form, Input, InputNumber, message, Select } from 'antd'
 import React, { useState } from 'react'
-import { exportPostsXlsx } from '../api'
+import { exportPostsXlsx } from '../../api'
 
 const ExportPostsXlsx: React.FC = () => {
   const [loading, setLoading] = useState(false)

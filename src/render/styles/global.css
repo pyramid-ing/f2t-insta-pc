@@ -1,10 +1,10 @@
-@layer tailwind-base, antd
-
-@layer tailwind-base {
-  @tailwind base;
+body {
+  margin: 0;
+  padding: 0;
 }
-@tailwind components;
-@tailwind utilities;
+#root {
+  min-height: 100vh;
+}
 
 /* Ant Design 추가 스타일 */
 @layer antd {

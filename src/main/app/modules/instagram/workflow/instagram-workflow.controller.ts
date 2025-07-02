@@ -69,21 +69,11 @@ export class InstagramWorkflowController {
     if (!file) {
       throw new HttpException('엑셀 파일이 필요합니다.', HttpStatus.BAD_REQUEST)
     }
-    const setting = await this.settingsService.findByKey('instagram')
-    let igId: string | undefined, igPw: string | undefined
-    let data = setting?.data
-    if (typeof data === 'string') {
-      try {
-        data = JSON.parse(data)
-      } catch {}
-    }
-    const dataObj = data as any
-    igId = dataObj?.igId
-    igPw = dataObj?.igPw
-    if (!igId || !igPw) {
+    const globalSettings = await this.settingsService.getGlobalSettings()
+    if (!globalSettings.loginId || !globalSettings.loginPassword) {
       throw new HttpException('인스타그램 로그인 정보(아이디/비밀번호)가 필요합니다.', HttpStatus.BAD_REQUEST)
     }
-    await this.instagramApi.login(igId, igPw)
+    await this.instagramApi.login(globalSettings.loginId, globalSettings.loginPassword)
     const workbook = XLSX.read(file.buffer, { type: 'buffer' })
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
     const rows = XLSX.utils.sheet_to_json(sheet)

@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const API_BASE_URL = 'http://localhost:3554'
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3554',
+  baseURL: API_BASE_URL,
 })
 
 // 에러 코드 enum
@@ -36,6 +38,32 @@ export interface ErrorResponse {
     isExpired?: boolean
     additionalInfo?: Record<string, any>
   }
+}
+
+// PostJob 타입
+export interface PostJob {
+  id: string
+  subject?: string
+  desc: string
+  loginId: string
+  loginPw: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  resultMsg?: string
+  resultUrl?: string
+  scheduledAt: string
+  postedAt?: string
+  createdAt: string
+  updatedAt: string
+  latestLog?: JobLog | null
+}
+
+// JobLog 타입
+export interface JobLog {
+  id: string
+  jobId: string
+  message: string
+  createdAt: string
+  updatedAt: string
 }
 
 // 에러 메시지 생성 헬퍼 함수
@@ -75,6 +103,65 @@ export function getErrorDetails(error: any): string | undefined {
   return undefined
 }
 
+// ------------------------------
+// PostJob API
+// ------------------------------
+
+// PostJob 목록 조회
+export async function getPostJobs(options?: {
+  status?: string
+  search?: string
+  orderBy?: string
+  order?: 'asc' | 'desc'
+}): Promise<PostJob[]> {
+  const params = new URLSearchParams()
+  if (options?.status) params.append('status', options.status)
+  if (options?.search) params.append('search', options.search)
+  if (options?.orderBy) params.append('orderBy', options.orderBy)
+  if (options?.order) params.append('order', options.order)
+
+  const res = await apiClient.get(`/post-jobs?${params.toString()}`)
+  return res.data
+}
+
+// PostJob 상세 조회 (로그 포함)
+export async function getPostJob(id: string): Promise<PostJob> {
+  const res = await apiClient.get(`/post-jobs/${id}`)
+  return res.data
+}
+
+// PostJob 재시도
+export async function retryPostJob(id: string): Promise<{ success: boolean; message: string }> {
+  const res = await apiClient.post(`/post-jobs/${id}/retry`)
+  return res.data
+}
+
+// PostJob 삭제
+export async function deletePostJob(id: string): Promise<{ success: boolean; message: string }> {
+  const res = await apiClient.delete(`/post-jobs/${id}`)
+  return res.data
+}
+
+// ------------------------------
+// JobLog API
+// ------------------------------
+
+// 특정 Job의 로그 목록 가져오기
+export async function getJobLogs(jobId: string): Promise<JobLog[]> {
+  const res = await apiClient.get(`/logs/${jobId}`)
+  return res.data.logs
+}
+
+// 특정 Job의 최신 로그 가져오기
+export async function getLatestJobLog(jobId: string): Promise<JobLog | null> {
+  const res = await apiClient.get(`/logs/${jobId}/latest`)
+  return res.data.log
+}
+
+// ------------------------------
+// Instagram API
+// ------------------------------
+
 // 게시물 엑셀 내보내기
 export async function exportPostsXlsx(data: { keyword: string; limit?: number; orderBy?: string }): Promise<Blob> {
   try {
@@ -96,43 +183,26 @@ export async function sendDmTo(file: File): Promise<any> {
   return res.data
 }
 
-// Instagram 로그인
-export async function instagramLogin(): Promise<any> {
-  const res = await apiClient.post('/instagram/workflow/login')
-  return res.data
-}
-
-// Instagram 로그아웃
-export async function instagramLogout(): Promise<any> {
-  const res = await apiClient.post('/instagram/workflow/logout')
-  return res.data
-}
-
-// 글로벌 설정 불러오기 (로그인 정보, 딜레이 설정 포함)
-export async function getGlobalSettings() {
-  const res = await apiClient.get('/settings/global')
-  return res.data
-}
-
-// 글로벌 설정 저장 (로그인 정보, 딜레이 설정 포함)
-export async function saveGlobalSettings(data: {
+// ------------------------------
+// Settings API
+// ------------------------------
+export interface GlobalSetting {
+  taskDelay?: number
+  showBrowserWindow?: boolean
   minDelay?: number
   maxDelay?: number
   loginId?: string
   loginPassword?: string
-}) {
+}
+
+// 글로벌 설정 불러오기 (로그인 정보, 딜레이 설정 포함)
+export async function getGlobalSettings(): Promise<GlobalSetting> {
+  const res = await apiClient.get('/settings/global')
+  return res.data.data
+}
+
+// 글로벌 설정 저장 (로그인 정보, 딜레이 설정 포함)
+export async function saveGlobalSettings(data: GlobalSetting) {
   const res = await apiClient.post('/settings/global', data)
-  return res.data
-}
-
-// 앱 설정 불러오기 (브라우저 창 표시 설정 등)
-export async function getAppSettings() {
-  const res = await apiClient.get('/settings/app')
-  return res.data
-}
-
-// 앱 설정 저장 (브라우저 창 표시 설정 등)
-export async function saveAppSettings(data: { showBrowserWindow?: boolean }) {
-  const res = await apiClient.post('/settings/app', data)
   return res.data
 }

@@ -2,11 +2,9 @@ import { PrismaService } from '@main/app/modules/common/prisma/prisma.service'
 import { Injectable, Logger } from '@nestjs/common'
 import { OpenAI } from 'openai'
 
-interface AppSettings {
-  showBrowserWindow: boolean
-}
-
 export interface GlobalSettings {
+  taskDelay?: number
+  showBrowserWindow?: boolean
   minDelay?: number
   maxDelay?: number
   loginId?: string
@@ -18,11 +16,6 @@ export class SettingsService {
   private readonly logger = new Logger(SettingsService.name)
 
   constructor(private readonly prisma: PrismaService) {}
-
-  // 모든 설정 조회
-  async findAll() {
-    return this.prisma.settings.findMany()
-  }
 
   // key로 조회
   async findByKey(key: string) {
@@ -37,12 +30,6 @@ export class SettingsService {
       create: { id: this.keyToId(key), data },
     })
   }
-
-  // upsert 메서드 (컨트롤러에서 사용)
-  async upsert(key: string, data: any) {
-    return this.saveByKey(key, data)
-  }
-
   // OpenAI API 키 검증
   async validateOpenAIKey(apiKey: string): Promise<{ valid: boolean; error?: string; model?: string }> {
     try {
@@ -89,11 +76,13 @@ export class SettingsService {
   // 글로벌 설정 조회 (타입 안전)
   async getGlobalSettings(): Promise<GlobalSettings> {
     const setting = await this.findByKey('global')
-    const data = (setting?.data as any) || {}
+    const data = setting.data as GlobalSettings
 
     return {
-      minDelay: data.minDelay || 3000,
-      maxDelay: data.maxDelay || 8000,
+      taskDelay: data.taskDelay,
+      showBrowserWindow: data.showBrowserWindow || false,
+      minDelay: data.minDelay || 1000,
+      maxDelay: data.maxDelay || 10000,
       loginId: data.loginId || '',
       loginPassword: data.loginPassword || '',
     }
@@ -106,20 +95,9 @@ export class SettingsService {
     await this.saveByKey('global', updatedSettings)
   }
 
-  // 딜레이 설정 조회 (global 설정에서)
-  async getDelaySettings(): Promise<{ minDelay: number; maxDelay: number }> {
-    const settings = await this.getGlobalSettings()
-
-    return {
-      minDelay: settings.minDelay || 3000,
-      maxDelay: settings.maxDelay || 8000,
-    }
-  }
-
   // key를 id로 변환 (간단 매핑, 실제 운영시 key 컬럼 추가 권장)
   private keyToId(key: string): number {
     if (key === 'global') return 2
-    if (key === 'app') return 1
     return 9999 // 기타
   }
 }

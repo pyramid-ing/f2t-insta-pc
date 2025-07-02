@@ -1,7 +1,7 @@
 import { UploadOutlined } from '@ant-design/icons'
 import { Button, Form, message, Table, Upload } from 'antd'
 import React, { useState } from 'react'
-import { sendDmTo } from '../api'
+import { sendDmTo } from '../../api'
 
 const SendDMForm: React.FC = () => {
   const [loading, setLoading] = useState(false)

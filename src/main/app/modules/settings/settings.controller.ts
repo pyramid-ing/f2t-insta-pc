@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Param, Post, Put } from '@nestjs/common'
+import { Body, Controller, Get, Logger, Post } from '@nestjs/common'
 import { SettingsService } from 'src/main/app/modules/settings/settings.service'
 import { PrismaService } from '../common/prisma/prisma.service'
 import { GlobalSettingsDto } from './dto/global-settings.dto'
@@ -32,46 +32,6 @@ export class SettingsController {
       this.logger.error('글로벌 설정 저장 실패:', error)
       return { success: false, error: error.message }
     }
-  }
-
-  @Get('/app')
-  async getAppSettings() {
-    try {
-      const setting = await this.settingsService.findByKey('app')
-      const defaultSettings = {
-        showBrowserWindow: true, // 기본값: 창보임
-      }
-      return { success: true, data: setting?.data || defaultSettings }
-    } catch (error) {
-      this.logger.error('앱 설정 조회 실패:', error)
-      return { success: false, error: error.message }
-    }
-  }
-
-  @Post('/app')
-  async saveAppSettings(@Body() data: any) {
-    try {
-      await this.settingsService.saveByKey('app', data)
-      return { success: true }
-    } catch (error) {
-      this.logger.error('앱 설정 저장 실패:', error)
-      return { success: false, error: error.message }
-    }
-  }
-
-  @Get('/')
-  async getAllSettings() {
-    return this.settingsService.findAll()
-  }
-
-  @Get('/:key')
-  async getSettingByKey(@Param('key') key: string) {
-    return this.settingsService.findByKey(key)
-  }
-
-  @Put('/:key')
-  async updateSetting(@Param('key') key: string, @Body() data: any) {
-    return this.settingsService.upsert(key, data)
   }
 
   @Post('/validate-openai-key')
