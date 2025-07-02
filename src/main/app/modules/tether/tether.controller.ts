@@ -38,9 +38,9 @@ export class TetherController {
   }
 
   @Post('reset-tethering')
-  resetTethering() {
+  async resetTethering() {
     try {
-      this.tetherService.resetUsbTethering()
+      await this.tetherService.resetUsbTethering()
       return {
         success: true,
         message: '테더링 리셋 완료',

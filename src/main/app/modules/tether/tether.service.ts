@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { execSync } from 'child_process'
+import { sleep } from '../../utils/sleep'
 
 @Injectable()
 export class TetherService {
@@ -16,15 +17,15 @@ export class TetherService {
     }
   }
 
-  resetUsbTethering(): void {
+  async resetUsbTethering(): Promise<void> {
     try {
       this.logger.log('[ADB] USB 테더링 OFF')
       execSync('adb shell svc data disable', { timeout: 5000 })
-      execSync('sleep 2')
+      await sleep(2000)
 
       this.logger.log('[ADB] USB 테더링 ON')
       execSync('adb shell svc data enable', { timeout: 5000 })
-      execSync('sleep 5')
+      await sleep(5000)
     } catch (e) {
       this.logger.error('[ADB] 테더링 리셋 실패:', e.message)
       throw new Error(`테더링 리셋 실패: ${e.message}`)
@@ -34,7 +35,7 @@ export class TetherService {
   async checkIpChanged(prevIp: { ip: string }): Promise<{ ip: string }> {
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        this.resetUsbTethering()
+        await this.resetUsbTethering()
         const newIp = this.getCurrentIp()
 
         this.logger.log(`[IP체크] 이전: ${prevIp.ip} / 새로고침: ${newIp.ip}`)
@@ -46,7 +47,7 @@ export class TetherService {
 
         if (attempt < 3) {
           this.logger.warn(`[IP체크] IP 변경 실패, ${attempt}회 재시도...`)
-          await new Promise(res => setTimeout(res, 3000))
+          await sleep(3000)
         }
       } catch (e) {
         this.logger.error(`[IP체크] ${attempt}회 시도 실패:`, e.message)
