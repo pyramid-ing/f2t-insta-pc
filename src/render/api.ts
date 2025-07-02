@@ -184,8 +184,6 @@ export async function exportSampleXlsx(): Promise<Blob> {
   }
 }
 
-
-
 // 엑셀 추출 Job 생성 (새로운 비동기 방식)
 export async function createExportJob(data: {
   keyword: string
@@ -213,8 +211,6 @@ export async function downloadExportFile(jobId: string): Promise<Blob> {
     throw new Error(errorMessage)
   }
 }
-
-
 
 // DM 예약 전송 (엑셀 업로드)
 export async function uploadDmSchedule(file: File): Promise<any> {

@@ -60,7 +60,6 @@ const ExportPostsXlsx: React.FC = () => {
         }}
         style={{ maxWidth: 400 }}
       >
-
         <Form.Item label="검색 키워드" name="keyword" rules={[{ required: true, message: '키워드를 입력하세요.' }]}>
           <Input placeholder="예: 여행" />
         </Form.Item>

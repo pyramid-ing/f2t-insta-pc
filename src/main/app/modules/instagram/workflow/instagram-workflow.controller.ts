@@ -60,8 +60,6 @@ export class InstagramWorkflowController {
     res.send(buffer)
   }
 
-
-
   @Post('create-export-job')
   async createExportJob(@Body() dto: WorkflowExportXlsxDto) {
     const result = await this.postJobService.createExportJob({
@@ -99,6 +97,4 @@ export class InstagramWorkflowController {
     const fileStream = fs.createReadStream(job.resultFilePath)
     fileStream.pipe(res)
   }
-
-
 }

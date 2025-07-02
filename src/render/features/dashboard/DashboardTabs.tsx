@@ -1,7 +1,8 @@
 import { Tabs } from 'antd'
 import React from 'react'
+import ScheduledPostsTable from '../work-management/ScheduledPostsTable'
+import DmScheduleUpload from './DmScheduleUpload'
 import ExportPostsXlsx from './ExportPostsXlsx'
-import SendDMForm from './SendDMForm'
 
 const DashboardTabs: React.FC = () => {
   return (
@@ -17,11 +18,16 @@ const DashboardTabs: React.FC = () => {
           },
           {
             key: '2',
-            label: 'DM 보내기',
-            children: <SendDMForm />,
+            label: 'DM 전송',
+            children: <DmScheduleUpload />,
           },
         ]}
       />
+
+      {/* 작업관리는 탭 밖에서 항상 보이도록 배치 */}
+      <div style={{ marginTop: '24px' }}>
+        <ScheduledPostsTable />
+      </div>
     </div>
   )
 }
