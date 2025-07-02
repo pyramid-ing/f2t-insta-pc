@@ -11,6 +11,7 @@ import { CommonModule } from './modules/common/common.module'
 import { PrismaService } from './modules/common/prisma/prisma.service'
 import { InstagramModule } from './modules/instagram/instagram.module'
 import { SettingsModule } from './modules/settings/settings.module'
+import { TetherModule } from './modules/tether/tether.module'
 import { UtilModule } from './modules/util/util.module'
 
 @Module({
@@ -44,6 +45,7 @@ import { UtilModule } from './modules/util/util.module'
       isGlobal: true,
     }),
     SettingsModule,
+    TetherModule,
     ScheduleModule.forRoot(),
     CommonModule,
     UtilModule,

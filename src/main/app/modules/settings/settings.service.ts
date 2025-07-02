@@ -9,6 +9,8 @@ export interface GlobalSettings {
   maxDelay?: number
   loginId?: string
   loginPassword?: string
+  useTethering?: boolean
+  tetherInterface?: string
 }
 
 @Injectable()
@@ -85,6 +87,8 @@ export class SettingsService {
       maxDelay: data.maxDelay || 10000,
       loginId: data.loginId || '',
       loginPassword: data.loginPassword || '',
+      useTethering: data.useTethering || false,
+      tetherInterface: data.tetherInterface || 'enp0s20u2',
     }
   }
 

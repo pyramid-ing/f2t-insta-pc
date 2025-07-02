@@ -212,6 +212,8 @@ export interface GlobalSetting {
   maxDelay?: number
   loginId?: string
   loginPassword?: string
+  useTethering?: boolean
+  tetherInterface?: string
 }
 
 // 글로벌 설정 불러오기 (로그인 정보, 딜레이 설정 포함)
@@ -223,5 +225,54 @@ export async function getGlobalSettings(): Promise<GlobalSetting> {
 // 글로벌 설정 저장 (로그인 정보, 딜레이 설정 포함)
 export async function saveGlobalSettings(data: GlobalSetting) {
   const res = await apiClient.post('/settings/global', data)
+  return res.data
+}
+
+// ------------------------------
+// Tether API
+// ------------------------------
+
+// 테더링 헬스체크
+export async function getTetherHealthCheck(): Promise<{
+  success: boolean
+  data?: {
+    adbConnected: boolean
+    currentIp: string
+    devices: string[]
+    tetherInterface: string
+  }
+  error?: string
+}> {
+  const res = await apiClient.get('/tether/health-check')
+  return res.data
+}
+
+// 현재 IP 조회
+export async function getCurrentIp(): Promise<{
+  success: boolean
+  data?: { ip: string }
+  error?: string
+}> {
+  const res = await apiClient.get('/tether/current-ip')
+  return res.data
+}
+
+// 테더링 리셋
+export async function resetTethering(): Promise<{
+  success: boolean
+  message?: string
+  error?: string
+}> {
+  const res = await apiClient.post('/tether/reset-tethering')
+  return res.data
+}
+
+// IP 변경
+export async function changeIp(prevIp: string): Promise<{
+  success: boolean
+  data?: { ip: string }
+  error?: string
+}> {
+  const res = await apiClient.post('/tether/change-ip', { prevIp })
   return res.data
 }

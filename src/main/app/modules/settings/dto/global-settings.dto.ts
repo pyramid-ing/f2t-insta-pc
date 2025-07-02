@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString, Min } from 'class-validator'
+import { IsBoolean, IsNumber, IsOptional, IsString, Min } from 'class-validator'
 
 export class GlobalSettingsDto {
   @IsOptional()
@@ -18,4 +18,12 @@ export class GlobalSettingsDto {
   @IsOptional()
   @IsString()
   loginPassword?: string
+
+  @IsOptional()
+  @IsBoolean()
+  useTethering?: boolean
+
+  @IsOptional()
+  @IsString()
+  tetherInterface?: string
 }

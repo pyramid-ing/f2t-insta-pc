@@ -3,6 +3,7 @@ import { Card, Tabs, Typography } from 'antd'
 import React, { useState } from 'react'
 import GeneralSettingsForm from './GeneralSettingsForm'
 import LoginSettingsForm from './LoginSettingsForm'
+import TetherSettingsForm from './TetherSettingsForm'
 
 const { Title } = Typography
 
@@ -34,6 +35,11 @@ const SettingsTabs: React.FC = () => {
               key: 'login',
               label: '로그인 정보',
               children: <LoginSettingsForm />,
+            },
+            {
+              key: 'tether',
+              label: '테더링',
+              children: <TetherSettingsForm />,
             },
           ]}
         />
