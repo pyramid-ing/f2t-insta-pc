@@ -16,6 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - 수정된 버그를 여기에 추가
 
+## [1.3.43] - 2025-07-03
+
+### Added
+- macOS 플랫폼 빌드 지원 추가
+- 멀티플랫폼 매트릭스 빌드 시스템 구축
+- Windows와 macOS 동시 배포 기능
+
+### Changed
+- GitHub Actions 워크플로우 매트릭스 전략으로 개선
+- 태그 트리거 제거로 워크플로우 단순화
+- CHANGELOG 처리 로직 통합 및 최적화
+
+### Fixed
+- 매트릭스 셸 표현식 오류 수정
+- 플랫폼별 캐시 설정 문제 해결
+- 중복 릴리즈 노트 생성 로직 제거
+
 ## [1.3.3] - 2024-12-28
 
 ### Added
