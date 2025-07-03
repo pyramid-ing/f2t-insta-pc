@@ -61,7 +61,19 @@ jobs:
     needs: check-version
     # 버전이 변경되었거나 태그 푸시인 경우에만 실행
     if: needs.check-version.outputs.version-changed == 'true' || startsWith(github.ref, 'refs/tags/')
-    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+        include:
+          - os: windows-latest
+            platform: win
+            shell: pwsh
+          - os: macos-latest
+            platform: mac
+            shell: bash
+    
+    runs-on: ${{ matrix.os }}
 
     steps:
       # 1. 리포지토리 클론
@@ -86,9 +98,13 @@ jobs:
 
       # 4. pnpm 캐시 설정
       - name: Get pnpm store directory
-        shell: pwsh
+        shell: ${{ matrix.shell }}
         run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $env:GITHUB_ENV
+          if [ "${{ matrix.platform }}" == "win" ]; then
+            echo "STORE_PATH=$(pnpm store path --silent)" >> $env:GITHUB_ENV
+          else
+            echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          fi
 
       - name: Setup pnpm cache
         uses: actions/cache@v4
@@ -100,7 +116,7 @@ jobs:
 
       # 5. pnpm 의존성 설치
       - name: Install dependencies
-        shell: pwsh
+        shell: ${{ matrix.shell }}
         run: |
           pnpm config set network-timeout 300000
           pnpm config set fetch-retries 5
@@ -117,10 +133,10 @@ jobs:
       - name: Build initial database
         run: node scripts/build-initial-db.js
 
-      # 8. 새 태그 생성 (버전이 변경된 경우)
+      # 8. 새 태그 생성 (버전이 변경된 경우, Windows에서만 실행)
       - name: Create and push tag
-        if: needs.check-version.outputs.version-changed == 'true'
-        shell: pwsh
+        if: needs.check-version.outputs.version-changed == 'true' && matrix.platform == 'win'
+        shell: ${{ matrix.shell }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -128,24 +144,24 @@ jobs:
           git push origin "${{ needs.check-version.outputs.tag-name }}"
 
       # 9. Electron 빌드
-      - name: Build Windows App
+      - name: Build ${{ matrix.platform }} App
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: pnpm build
-        shell: pwsh
+        shell: ${{ matrix.shell }}
 
       # 10. 빌드된 파일 업로드 (Artifacts)
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: f2t-insta-dm-windows-v${{ needs.check-version.outputs.current-version }}
+          name: f2t-insta-dm-${{ matrix.platform }}-v${{ needs.check-version.outputs.current-version }}
           path: dist/electron
 
-      # 11. CHANGELOG에서 릴리즈 노트 추출
+      # 11. CHANGELOG에서 릴리즈 노트 추출 (Windows에서만 실행)
       - name: Extract Release Notes from CHANGELOG
         id: release-notes
-        if: startsWith(github.ref, 'refs/tags/') || needs.check-version.outputs.version-changed == 'true'
-        shell: pwsh
+        if: (startsWith(github.ref, 'refs/tags/') || needs.check-version.outputs.version-changed == 'true') && matrix.platform == 'win'
+        shell: ${{ matrix.shell }}
         run: |
           $version = "${{ needs.check-version.outputs.current-version }}"
           $changelogPath = "CHANGELOG.md"
@@ -214,15 +230,96 @@ jobs:
             echo $delimiter >> $env:GITHUB_OUTPUT
           }
 
-      # 12. GitHub Release 생성 (태그가 있는 경우 또는 새 버전인 경우)
+  # 12. GitHub Release 생성 (모든 빌드 완료 후 실행)
+  release:
+    needs: [check-version, build]
+    if: startsWith(github.ref, 'refs/tags/') || needs.check-version.outputs.version-changed == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: f2t-insta-dm-win-v${{ needs.check-version.outputs.current-version }}
+          path: ./artifacts/windows
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: f2t-insta-dm-mac-v${{ needs.check-version.outputs.current-version }}
+          path: ./artifacts/macos
+
+      - name: Extract Release Notes from CHANGELOG
+        id: release-notes
+        shell: bash
+        run: |
+          version="${{ needs.check-version.outputs.current-version }}"
+          changelog_path="CHANGELOG.md"
+          
+          if [[ -f "$changelog_path" ]]; then
+            # 현재 버전의 변경사항 추출
+            release_notes=$(sed -n "/## \[$version\]/,/## \[/{/## \[$version\]/d;/## \[/q;p}" "$changelog_path")
+            
+            if [[ -n "$release_notes" ]]; then
+              # GitHub Actions output으로 설정 (멀티라인 처리)
+              delimiter="EOF$(shuf -i 1000-9999 -n 1)"
+              echo "notes<<$delimiter" >> $GITHUB_OUTPUT
+              echo "$release_notes" >> $GITHUB_OUTPUT
+              echo "$delimiter" >> $GITHUB_OUTPUT
+            else
+              # 버전이 CHANGELOG에 없는 경우 기본 메시지
+              default_notes="### 🚀 새로운 버전 릴리즈
+
+          버전 $version이 릴리즈되었습니다.
+
+          ### 📦 다운로드
+          아래 Assets에서 해당 운영체제에 맞는 설치 파일을 다운로드하세요.
+
+          ### 📋 설치 방법
+          1. 해당 운영체제의 설치 파일을 다운로드
+          2. 실행하여 설치 진행
+          3. 설치 완료 후 애플리케이션 실행
+
+          ---
+          *이 릴리즈는 GitHub Actions를 통해 자동으로 생성되었습니다.*
+
+          **참고**: 상세한 변경사항은 CHANGELOG.md에서 확인하세요."
+              
+              delimiter="EOF$(shuf -i 1000-9999 -n 1)"
+              echo "notes<<$delimiter" >> $GITHUB_OUTPUT
+              echo "$default_notes" >> $GITHUB_OUTPUT
+              echo "$delimiter" >> $GITHUB_OUTPUT
+            fi
+          else
+            # CHANGELOG.md가 없는 경우 기본 메시지
+            default_notes="### 🚀 새로운 버전 릴리즈
+
+          버전 $version이 릴리즈되었습니다.
+
+          ### 📦 다운로드
+          아래 Assets에서 해당 운영체제에 맞는 설치 파일을 다운로드하세요.
+
+          ---
+          *이 릴리즈는 GitHub Actions를 통해 자동으로 생성되었습니다.*"
+            
+            delimiter="EOF$(shuf -i 1000-9999 -n 1)"
+            echo "notes<<$delimiter" >> $GITHUB_OUTPUT
+            echo "$default_notes" >> $GITHUB_OUTPUT
+            echo "$delimiter" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/') || needs.check-version.outputs.version-changed == 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ needs.check-version.outputs.tag-name }}
           name: Release ${{ needs.check-version.outputs.tag-name }}
           body: ${{ steps.release-notes.outputs.notes }}
-          files: dist/electron/*
+          files: |
+            ./artifacts/windows/*
+            ./artifacts/macos/*
           draft: false
           prerelease: false
         env:
