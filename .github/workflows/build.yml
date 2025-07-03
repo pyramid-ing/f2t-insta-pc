@@ -68,10 +68,8 @@ jobs:
         include:
           - os: windows-latest
             platform: win
-            shell: pwsh
           - os: macos-latest
             platform: mac
-            shell: bash
     
     runs-on: ${{ matrix.os }}
 
@@ -96,15 +94,19 @@ jobs:
           version: 10.12.1
           run_install: false # 자동 설치 비활성화
 
-      # 4. pnpm 캐시 설정
-      - name: Get pnpm store directory
-        shell: ${{ matrix.shell }}
+      # 4. pnpm 캐시 설정 (Windows)
+      - name: Get pnpm store directory (Windows)
+        if: matrix.platform == 'win'
+        shell: pwsh
         run: |
-          if [ "${{ matrix.platform }}" == "win" ]; then
-            echo "STORE_PATH=$(pnpm store path --silent)" >> $env:GITHUB_ENV
-          else
-            echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-          fi
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $env:GITHUB_ENV
+
+      # 4. pnpm 캐시 설정 (macOS)
+      - name: Get pnpm store directory (macOS)
+        if: matrix.platform == 'mac'
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Setup pnpm cache
         uses: actions/cache@v4
@@ -116,7 +118,6 @@ jobs:
 
       # 5. pnpm 의존성 설치
       - name: Install dependencies
-        shell: ${{ matrix.shell }}
         run: |
           pnpm config set network-timeout 300000
           pnpm config set fetch-retries 5
@@ -136,7 +137,7 @@ jobs:
       # 8. 새 태그 생성 (버전이 변경된 경우, Windows에서만 실행)
       - name: Create and push tag
         if: needs.check-version.outputs.version-changed == 'true' && matrix.platform == 'win'
-        shell: ${{ matrix.shell }}
+        shell: pwsh
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -148,7 +149,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: pnpm build
-        shell: ${{ matrix.shell }}
 
       # 10. 빌드된 파일 업로드 (Artifacts)
       - name: Upload Artifacts
@@ -161,7 +161,7 @@ jobs:
       - name: Extract Release Notes from CHANGELOG
         id: release-notes
         if: (startsWith(github.ref, 'refs/tags/') || needs.check-version.outputs.version-changed == 'true') && matrix.platform == 'win'
-        shell: ${{ matrix.shell }}
+        shell: pwsh
         run: |
           $version = "${{ needs.check-version.outputs.current-version }}"
           $changelogPath = "CHANGELOG.md"
