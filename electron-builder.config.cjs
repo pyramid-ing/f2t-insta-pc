@@ -53,6 +53,7 @@ const config = {
     icon: 'build/icon.icns',
     target: [
       'dmg',
+      'zip',
     ],
     category: 'public.app-category.utilities',
     identity: null,
