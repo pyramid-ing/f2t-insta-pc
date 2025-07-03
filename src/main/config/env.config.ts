@@ -110,14 +110,14 @@ export class EnvConfig {
         const packageJson = require('../../../../package.json')
         const currentVersion = packageJson.version
 
-        let recordedVersion
+        let recordedVersion = null
         try {
           recordedVersion = fs.readFileSync(versionFilePath, 'utf8').trim()
         } catch (err) {
-          LoggerConfig.error('Error reading version file:', err)
+          LoggerConfig.warn('Version file not found or unreadable, assuming first installation.')
         }
 
-        if (recordedVersion < currentVersion) {
+        if (recordedVersion !== currentVersion) {
           if (fs.existsSync(this.initialDbPath)) {
             const dbDir = path.dirname(this.dbPath)
             if (!fs.existsSync(dbDir)) {
