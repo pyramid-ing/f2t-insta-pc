@@ -106,18 +106,29 @@ export class EnvConfig {
     try {
       if (this.isPackaged) {
         // 패키지된 앱에서는 최초 설치 시에만 초기 DB를 userData로 복사
-        if (fs.existsSync(this.initialDbPath)) {
-          const dbDir = path.dirname(this.dbPath)
-          if (!fs.existsSync(dbDir)) {
-            fs.mkdirSync(dbDir, { recursive: true })
+        const versionFilePath = path.join(this.userDataCustomPath, 'DB_MIGRATION_VER')
+        const packageJson = require('../../../../package.json')
+        const currentVersion = packageJson.version
+
+        let recordedVersion
+        try {
+          recordedVersion = fs.readFileSync(versionFilePath, 'utf8').trim()
+        } catch (err) {
+          LoggerConfig.error('Error reading version file:', err)
+        }
+
+        if (recordedVersion < currentVersion) {
+          if (fs.existsSync(this.initialDbPath)) {
+            const dbDir = path.dirname(this.dbPath)
+            if (!fs.existsSync(dbDir)) {
+              fs.mkdirSync(dbDir, { recursive: true })
+            }
+
+            // 초기 DB를 userData로 복사
+            fs.copyFileSync(this.initialDbPath, this.dbPath)
+            LoggerConfig.info(`초기 데이터베이스 복사 완료: ${this.initialDbPath} → ${this.dbPath}`)
           }
-
-          // 초기 DB를 userData로 복사
-          fs.copyFileSync(this.initialDbPath, this.dbPath)
-          LoggerConfig.info(`초기 데이터베이스 복사 완료: ${this.initialDbPath} → ${this.dbPath}`)
-
-          // 초기 DB 삭제
-          fs.unlinkSync(this.initialDbPath)
+          fs.writeFileSync(versionFilePath, currentVersion, 'utf8')
         } else if (fs.existsSync(this.dbPath)) {
           LoggerConfig.info(`기존 데이터베이스 사용: ${this.dbPath}`)
         }
