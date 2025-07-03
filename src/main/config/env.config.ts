@@ -12,10 +12,13 @@ export class EnvConfig {
   public static isElectron = process.versions && process.versions.electron
   public static isPackaged = app?.isPackaged || false
   public static userDataPath = EnvConfig.isPackaged ? app.getPath('userData') : process.cwd()
+  public static userDataCustomPath = EnvConfig.isPackaged
+    ? path.join(EnvConfig.userDataPath, 'f2t')
+    : path.join(process.cwd(), 'static')
   public static resourcePath = EnvConfig.isPackaged ? process.resourcesPath : process.cwd()
 
   // 패키지된 앱에서는 userData 폴더에 DB를 저장
-  public static dbPath = EnvConfig.isPackaged ? path.join(EnvConfig.userDataPath, 'app.sqlite') : './db.sqlite'
+  public static dbPath = EnvConfig.isPackaged ? path.join(EnvConfig.userDataCustomPath, 'app.sqlite') : './db.sqlite'
 
   // 초기 DB 템플릿 경로 (resources 폴더)
   public static initialDbPath = EnvConfig.isPackaged
@@ -25,9 +28,7 @@ export class EnvConfig {
   public static dbUrl = `file:${EnvConfig.dbPath}`
 
   // 다운로드 폴더 경로 설정
-  public static exportsDir = EnvConfig.isPackaged
-    ? path.join(EnvConfig.userDataPath, 'exports')
-    : path.join(process.cwd(), 'static', 'exports')
+  public static exportsDir = path.join(EnvConfig.userDataCustomPath, 'exports')
 
   private static engineName = ''
   private static libName = ''
@@ -98,7 +99,7 @@ export class EnvConfig {
     process.env.DATABASE_URL = this.dbUrl
     process.env.PRISMA_QUERY_ENGINE_BINARY = enginePath
     process.env.PRISMA_QUERY_ENGINE_LIBRARY = libPath
-    process.env.COOKIE_DIR = path.join(this.userDataPath, 'cookies')
+    process.env.COOKIE_DIR = path.join(this.userDataCustomPath, 'cookies')
   }
 
   private static initializeDatabase() {
