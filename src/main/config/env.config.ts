@@ -107,7 +107,7 @@ export class EnvConfig {
       if (this.isPackaged) {
         // 패키지된 앱에서는 최초 설치 시에만 초기 DB를 userData로 복사
         const versionFilePath = path.join(this.userDataCustomPath, 'DB_MIGRATION_VER')
-        const packageJsonPath = path.resolve(__dirname, '../../../package.json')
+        const packageJsonPath = path.join(app.getAppPath(), 'package.json')
         const packageJson = require(packageJsonPath)
         const currentVersion = packageJson.version
 
