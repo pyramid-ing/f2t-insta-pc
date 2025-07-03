@@ -1,0 +1,22 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+  categories:
+    - title: 🚀 새로운 기능
+      labels:
+        - feature
+        - enhancement
+        - new-feature
+    - title: 🐛 버그 수정
+      labels:
+        - bug
+        - fix
+        - bugfix
+    - title: 📚 문서 개선
+      labels:
+        - documentation
+        - docs
+    - title: 🔧 기타 변경사항
+      labels:
+        - "*" 

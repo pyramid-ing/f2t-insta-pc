@@ -4,16 +4,66 @@ on:
   push:
     branches:
       - master
+    tags:
+      - 'v*.*.*'  # 버전 태그 푸시 시에도 트리거
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
+  # 버전 체크 Job (빌드 전에 실행)
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version-changed: ${{ steps.version-check.outputs.version-changed }}
+      current-version: ${{ steps.package-version.outputs.version }}
+      tag-name: ${{ steps.package-version.outputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 모든 히스토리 가져오기 (태그 비교용)
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Get package version
+        id: package-version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "tag=v$version" >> $GITHUB_OUTPUT
+
+      - name: Check if version changed
+        id: version-check
+        if: github.ref == 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/')
+        run: |
+          currentVersion="${{ steps.package-version.outputs.version }}"
+          if git tag -l "v$currentVersion" | grep -q "v$currentVersion"; then
+            echo "version-changed=false" >> $GITHUB_OUTPUT
+            echo "✅ Version $currentVersion already exists as a tag - skipping build"
+          else
+            echo "version-changed=true" >> $GITHUB_OUTPUT
+            echo "🚀 New version detected: $currentVersion - proceeding with build"
+          fi
+
+      - name: Skip build notification
+        if: steps.version-check.outputs.version-changed == 'false'
+        run: |
+          echo "⏭️ Build skipped: Version ${{ steps.package-version.outputs.version }} has not changed"
+
   build:
+    needs: check-version
+    # 버전이 변경되었거나 태그 푸시인 경우에만 실행
+    if: needs.check-version.outputs.version-changed == 'true' || startsWith(github.ref, 'refs/tags/')
     runs-on: windows-latest
 
     steps:
       # 1. 리포지토리 클론
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 모든 히스토리 가져오기 (태그 비교용)
 
       # 2. Node.js 환경 설정
       - name: Setup Node.js
@@ -61,13 +111,15 @@ jobs:
       - name: Build initial database
         run: node scripts/build-initial-db.js
 
-      # 8. package.json에서 버전 읽기
-      - name: Get package version
-        id: package-version
+      # 8. 새 태그 생성 (버전이 변경된 경우)
+      - name: Create and push tag
+        if: needs.check-version.outputs.version-changed == 'true'
         shell: pwsh
         run: |
-          $version = node -p "require('./package.json').version"
-          echo "version=$version" >> $env:GITHUB_OUTPUT
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ needs.check-version.outputs.tag-name }}"
+          git push origin "${{ needs.check-version.outputs.tag-name }}"
 
       # 9. Electron 빌드
       - name: Build Windows App
@@ -76,9 +128,96 @@ jobs:
         run: pnpm build
         shell: pwsh
 
-      # 10. 빌드된 파일 업로드
+      # 10. 빌드된 파일 업로드 (Artifacts)
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: f2t-insta-dm-windows-v${{ steps.package-version.outputs.version }}
+          name: f2t-insta-dm-windows-v${{ needs.check-version.outputs.current-version }}
           path: dist/electron
+
+      # 11. CHANGELOG에서 릴리즈 노트 추출
+      - name: Extract Release Notes from CHANGELOG
+        id: release-notes
+        if: startsWith(github.ref, 'refs/tags/') || needs.check-version.outputs.version-changed == 'true'
+        shell: pwsh
+        run: |
+          $version = "${{ needs.check-version.outputs.current-version }}"
+          $changelogPath = "CHANGELOG.md"
+          
+          if (Test-Path $changelogPath) {
+            $changelog = Get-Content $changelogPath -Raw
+            
+            # 현재 버전의 변경사항 추출
+            $pattern = "## \[$version\].*?(?=## \[|$)"
+            $match = [regex]::Match($changelog, $pattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
+            
+            if ($match.Success) {
+              $releaseNotes = $match.Value
+              # 버전 헤더 제거하고 내용만 추출
+              $releaseNotes = $releaseNotes -replace "## \[$version\][^\n]*\n", ""
+              $releaseNotes = $releaseNotes.Trim()
+              
+              # GitHub Actions output으로 설정 (멀티라인 처리)
+              $delimiter = "EOF$(Get-Random)"
+              echo "notes<<$delimiter" >> $env:GITHUB_OUTPUT
+              echo $releaseNotes >> $env:GITHUB_OUTPUT
+              echo $delimiter >> $env:GITHUB_OUTPUT
+            } else {
+              # 버전이 CHANGELOG에 없는 경우 기본 메시지
+              $defaultNotes = @"
+          ### 🚀 새로운 버전 릴리즈
+          
+          버전 $version이 릴리즈되었습니다.
+          
+          ### 📦 다운로드
+          아래 Assets에서 해당 운영체제에 맞는 설치 파일을 다운로드하세요.
+          
+          ### 📋 설치 방법
+          1. 해당 운영체제의 설치 파일을 다운로드
+          2. 실행하여 설치 진행
+          3. 설치 완료 후 애플리케이션 실행
+          
+          ---
+          *이 릴리즈는 GitHub Actions를 통해 자동으로 생성되었습니다.*
+          
+          **참고**: 상세한 변경사항은 CHANGELOG.md에서 확인하세요.
+          "@
+              
+              $delimiter = "EOF$(Get-Random)"
+              echo "notes<<$delimiter" >> $env:GITHUB_OUTPUT
+              echo $defaultNotes >> $env:GITHUB_OUTPUT
+              echo $delimiter >> $env:GITHUB_OUTPUT
+            }
+          } else {
+            # CHANGELOG.md가 없는 경우 기본 메시지
+            $defaultNotes = @"
+          ### 🚀 새로운 버전 릴리즈
+          
+          버전 $version이 릴리즈되었습니다.
+          
+          ### 📦 다운로드
+          아래 Assets에서 해당 운영체제에 맞는 설치 파일을 다운로드하세요.
+          
+          ---
+          *이 릴리즈는 GitHub Actions를 통해 자동으로 생성되었습니다.*
+          "@
+            
+            $delimiter = "EOF$(Get-Random)"
+            echo "notes<<$delimiter" >> $env:GITHUB_OUTPUT
+            echo $defaultNotes >> $env:GITHUB_OUTPUT
+            echo $delimiter >> $env:GITHUB_OUTPUT
+          }
+
+      # 12. GitHub Release 생성 (태그가 있는 경우 또는 새 버전인 경우)
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || needs.check-version.outputs.version-changed == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.check-version.outputs.tag-name }}
+          name: Release ${{ needs.check-version.outputs.tag-name }}
+          body: ${{ steps.release-notes.outputs.notes }}
+          files: dist/electron/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
