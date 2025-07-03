@@ -106,7 +106,7 @@ export class EnvConfig {
     try {
       if (this.isPackaged) {
         // 패키지된 앱에서는 최초 설치 시에만 초기 DB를 userData로 복사
-        if (!fs.existsSync(this.dbPath) && fs.existsSync(this.initialDbPath)) {
+        if (fs.existsSync(this.initialDbPath)) {
           const dbDir = path.dirname(this.dbPath)
           if (!fs.existsSync(dbDir)) {
             fs.mkdirSync(dbDir, { recursive: true })
