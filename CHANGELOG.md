@@ -16,6 +16,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - 수정된 버그를 여기에 추가
 
+## [1.3.3] - 2024-12-28
+
+### Added
+- 자동 빌드 및 배포 시스템 구축
+- GitHub Actions 워크플로우 개선
+- 버전 기반 자동 릴리즈 기능
+
+### Changed
+- 빌드 프로세스 최적화
+- 릴리즈 노트 자동 생성 방식 개선
+
+### Fixed
+- 권한 관련 오류 수정
+- 태그 생성 및 푸시 문제 해결
+
 ## [1.0.0] - 2024-01-01
 
 ### Added
