@@ -178,6 +178,15 @@ jobs:
           name: f2t-insta-dm-mac-v${{ needs.check-version.outputs.current-version }}
           path: ./artifacts/macos
 
+      - name: Remove duplicate files
+        run: |
+          # Remove builder-debug.yml to prevent upload conflicts
+          find ./artifacts -name "builder-debug.yml" -delete
+          
+          # List remaining files for debugging
+          echo "Files to be uploaded:"
+          find ./artifacts -type f | sort
+
       - name: Extract Release Notes from CHANGELOG
         id: release-notes
         shell: bash
