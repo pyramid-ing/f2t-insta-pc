@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - 수정된 버그를 여기에 추가
 
+## [1.3.48]
+DB버전추가
+
 ## [1.3.47] - 2025-07-03
 업데이트후 windows db 파일 복제가 안되는 버그 있어서 복사 & 삭제로 변경
 
